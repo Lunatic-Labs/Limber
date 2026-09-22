@@ -13,7 +13,8 @@ Staged, spec-driven approach: lock down vision/scope, then users, then functiona
 - [x] Stage 4: Non-Functional / Scalability Requirements — complete (see constitution.md, "Non-Functional Requirements (v1)")
 - [x] Stage 5: Technical Constraints & Preferences — complete (see constitution.md, "Technical Stack & Team")
 - [x] Stage 6: Data & Domain Model — complete (see constitution.md, "Data & Domain Model (v1)")
-- [ ] Stage 7: Architecture (schema, API surface, app structure, auth) — in progress
+- [x] Stage 7: Architecture (schema, API surface, app structure, auth) — complete
+- [ ] Next: database schema design (Drizzle models) and initial project scaffolding
 
 ## Decisions Log
 - Core value prop: PT communication + POC tracking. (Motion-capture-based progress *assessment* is part of the long-term vision but is **out of v1 scope**.)
@@ -58,12 +59,7 @@ Staged, spec-driven approach: lock down vision/scope, then users, then functiona
 - **ORM**: Drizzle
 - **File/media storage**: Vercel Blob
 - **API style**: Next.js Route Handlers
-- **Messaging delivery**: live/real-time chat (not poll-on-refresh) — **implementation still open**, see below
+- **Messaging delivery**: live/real-time chat via **Pusher Channels** (managed pub/sub over Vercel Route Handlers). Ably noted as an equivalent fallback if Pusher's free tier ever doesn't fit (similar API shape, low switching cost).
 - **Repo structure**: single Next.js app (frontend + API routes together)
 
-### Open: real-time transport for live chat
-Vercel's serverless Route Handlers don't hold persistent connections, so "live chat" needs a real-time layer on top — this is a genuine extra architectural decision, not just a detail. Options to choose between:
-- **Pusher Channels** (or **Ably**) — managed pub/sub, generous free tier, minimal ops, integrates cleanly with serverless route handlers. Adds a third-party vendor dependency.
-- **Supabase Realtime** — would mean adopting Supabase for at least the realtime layer while keeping Neon for the main database; more moving parts, probably not worth it unless there's another reason to want Supabase.
-- **Self-hosted WebSocket server** (e.g., a small long-running Node process, or something like PartyKit) — avoids a new SaaS vendor but reintroduces an "always-on server" ops concern that Vercel serverless was meant to avoid; more setup for a 2-person team.
-Leaning recommendation: Pusher Channels (or Ably) — smallest ops burden, free tier fits current budget constraint, and it's swappable later if outgrown.
+Stage 7 (Architecture) is now complete. Full v1 stack: Next.js (single app) on Vercel, Neon Postgres via Drizzle ORM, Auth.js for authentication, Vercel Blob for file/media storage, Next.js Route Handlers for the API, Pusher Channels for live chat.

@@ -44,10 +44,15 @@ Test cases and edge-case coverage are written **before** a feature is implemente
 ## Technical Stack & Team
 - **Hosting**: Vercel
 - **Source control**: GitHub
-- **Frontend/framework**: Next.js (or a comparable React-based framework) — chosen for Vercel-native deployment
+- **Frontend/framework**: Next.js — single app (frontend + API together), chosen for Vercel-native deployment
 - **Database**: Neon (Postgres), provisioned through Vercel
-- **Budget posture**: free-tier services for now (Vercel, Neon); design should not hard-depend on staying on free tier forever, since scale-up is an explicit long-term goal
-- **Default posture**: where a technology choice isn't dictated above, default to common, portable, well-supported options over niche or vendor-locked ones — keep future migration off Vercel/Neon realistic if ever needed
+- **ORM**: Drizzle
+- **Authentication**: Auth.js (NextAuth)
+- **File/media storage**: Vercel Blob (photos, videos, documents — kept out of Postgres)
+- **API style**: Next.js Route Handlers
+- **Real-time messaging**: Pusher Channels (managed pub/sub for live patient↔physician chat, since Vercel Route Handlers can't hold persistent connections themselves). Ably is an equivalent fallback if ever needed.
+- **Budget posture**: free-tier services for now (Vercel, Neon, Pusher); design should not hard-depend on staying on free tier forever, since scale-up is an explicit long-term goal
+- **Default posture**: where a technology choice isn't dictated above, default to common, portable, well-supported options over niche or vendor-locked ones — keep future migration realistic if ever needed
 - **Team**: 2 developers, working with 1 physician (domain expert/clinical advisor, not implementing code) — small-team scale should inform build choices (favor well-documented, low-ops-overhead tools over infrastructure that needs a dedicated ops role)
 
 ## Data & Domain Model (v1)
@@ -81,4 +86,4 @@ Core entities, at a high level:
 - **External integrations**: none required now, but the architecture should stay open to adding them (notifications, calendar sync, external storage/CDN, analytics, etc.) without a rewrite.
 
 ---
-*Version 6 — Stage 6 complete (data/domain model, phone-camera capture clarified as v1, admin role flagged for confirmation).*
+*Version 7 — Stage 7 complete (architecture: Drizzle, Auth.js, Vercel Blob, Route Handlers, Pusher Channels).*

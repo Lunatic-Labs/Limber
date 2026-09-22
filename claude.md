@@ -15,7 +15,8 @@ Staged, spec-driven approach: lock down vision/scope, then users, then functiona
 - [x] Stage 6: Data & Domain Model — complete (see constitution.md, "Data & Domain Model (v1)")
 - [x] Stage 7: Architecture (schema, API surface, app structure, auth) — complete
 - [x] Database schema drafted (db/schema.ts, Drizzle) — see decisions below
-- [ ] Next: initial Next.js project scaffolding
+- [x] Next.js project scaffolded (App Router, TypeScript, Tailwind, Drizzle client, Auth.js skeleton, Route Handlers) — see below
+- [ ] Next: run `npm install` and `npm run db:push` locally, choose an Auth.js provider, then start building real features
 
 ## Decisions Log
 - Core value prop: PT communication + POC tracking. (Motion-capture-based progress *assessment* is part of the long-term vision but is **out of v1 scope**.)
@@ -75,3 +76,24 @@ Stage 7 (Architecture) is now complete. Full v1 stack: Next.js (single app) on V
 - **Attachment constraints** (file type, size limits) are an app-level validation concern, not a schema concern — `attachment` table just stores the Vercel Blob URL + metadata.
 - **Auth.js tables** (`user`, `account`, `session`, `verification_token`) follow the standard `@auth/drizzle-adapter` shape, with `role` added to `user` to distinguish Patient/Physician/Administrator at the identity level.
 - **Role profile tables** (`patient_profile`, `physician_profile`, `administrator_profile`) keep role-specific fields off the auth-owned `user` table. `patient_profile.physician_user_id` records the patient's *currently assigned* physician (separate from each POC's own `physician_user_id`, which preserves history if a patient is ever reassigned).
+
+
+## Project Scaffold (Next.js)
+Hand-authored (this session's npm registry access is blocked by org egress policy, same as GitHub push — see below), so nothing has been `npm install`ed or built/tested yet. Structure:
+- `package.json` — Next.js 15, React 19, TypeScript, Tailwind, Drizzle ORM + drizzle-kit, `@neondatabase/serverless`, `next-auth` v5 (beta) + `@auth/drizzle-adapter`, `@vercel/blob`, `pusher` + `pusher-js`
+- `src/app/` — App Router; `src/app/page.tsx` is a placeholder home page
+- `src/app/api/health/route.ts` — liveness check Route Handler (`/api/health`), useful to confirm a Vercel deploy is actually serving traffic
+- `src/app/api/auth/[...nextauth]/route.ts` — wires Auth.js's handlers into a Route Handler
+- `auth.ts` — Auth.js config skeleton using the Drizzle adapter against `db/schema.ts`'s users/accounts/sessions/verificationTokens tables, plus a `session` callback that surfaces `role` on the session object. **No provider is configured yet** (email magic link vs. OAuth is still an open decision) — sign-in will not work until one is added.
+- `next-auth.d.ts` — type augmentation so `session.user.role` and `session.user.id` are properly typed
+- `db/index.ts` — Drizzle client (neon-http driver), reads `DATABASE_URL`
+- `drizzle.config.ts` — drizzle-kit config, points at `db/schema.ts`
+- `.env.example` — documents every env var the app needs (`DATABASE_URL`, `AUTH_SECRET`, Blob token, Pusher keys)
+- `GETTING_STARTED.md` — local dev setup + step-by-step Vercel deploy instructions (Neon integration, Blob store, Pusher env vars)
+- Vercel-readiness: no `vercel.json` needed — Vercel auto-detects Next.js from `package.json`. The main manual setup steps on Vercel are: add the Neon integration, add a Blob store, and set `AUTH_SECRET` + Pusher env vars by hand (documented in GETTING_STARTED.md).
+
+### Known gaps (not yet done)
+- Dependencies have never actually been installed or built in this session — this session's network can't reach `registry.npmjs.org` (blocked by org egress policy, exactly like the GitHub push block). **Run `npm install` and `npm run build` locally as a first sanity check** before assuming everything compiles cleanly.
+- No Auth.js provider is wired up yet (open decision: email magic link vs. an OAuth provider).
+- No actual UI/pages beyond the placeholder home page and health check.
+- Schema has not yet been pushed to a real Neon database (`npm run db:push`, once `DATABASE_URL` is set).

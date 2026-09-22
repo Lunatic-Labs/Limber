@@ -87,4 +87,4 @@ Implemented in `db/schema.ts` (Drizzle). Core entities:
 - **External integrations**: none required now, but the architecture should stay open to adding them (notifications, calendar sync, external storage/CDN, analytics, etc.) without a rewrite.
 
 ---
-*Version 8 — database schema drafted (db/schema.ts); domain model and calendar/appointment scope refined accordingly.*
+*Version 9 — Next.js project scaffolded (App Router, TypeScript, Tailwind, Drizzle client, Auth.js skeleton). See claude.md for scaffold details and known gaps (dependencies not yet installed, no auth provider wired up).*

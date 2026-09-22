@@ -5,7 +5,7 @@ Limber is a physical therapy platform that closes the gap between patients and p
 
 ## Core Principles
 1. **Patient-Physician Connection First** — the primary value is uninterrupted communication tied to a specific Plan of Care (POC).
-2. **Objective Progress Over Self-Report** — motion capture exists to give physicians verifiable movement data, not to replace clinical judgment.
+2. **Objective Progress Over Self-Report** — motion capture (once built) exists to give physicians verifiable movement data, not to replace clinical judgment.
 3. **Adaptable by Design** — architecture should not assume a single PT practice model; it should be extensible to different clinical contexts within physical therapy.
 4. **Simplicity for the End User** — patients and physicians should not need training to use core features.
 5. **Privacy-Minded from Day One** — even though v1 uses sample data and is not HIPAA-compliant, decisions should not paint us into a corner that makes future compliance hard.
@@ -29,7 +29,6 @@ Limber is a physical therapy platform that closes the gap between patients and p
 - Persistent chat history per patient-physician pair
 - Physician calendar: view all sessions, click into a session to see patient progress/notes, set notification reminders
 - Patient calendar: view upcoming sessions, add notes, request reschedule
-- Motion-capture movement assessment: camera-based capture of the patient performing POC exercises, analyzed for correctness, results shared with the physician for progress assessment
 
 ### Quality Bar
 Test cases and edge-case coverage are written **before** a feature is implemented, and the full test suite is run against every new feature added (not just the feature under development). This applies to every core feature above.
@@ -40,21 +39,25 @@ Test cases and edge-case coverage are written **before** a feature is implemente
 - **Latency**: no specific latency targets at this time.
 - **Compliance**: no regulatory constraints for v1 — the app runs on sample/test data only, not real patient data. HIPAA is explicitly not a v1 requirement (see "Open Considerations for the Future" for how this is still kept in mind).
 - **Access patterns**: not yet characterized (v1 is the first version; real usage patterns are unknown). Should be revisited once there's real or realistic simulated usage to observe.
+- **Budget**: stick to free-tier infrastructure for now (Vercel + Neon free tiers). Architecture should not assume free tier forever — keep a realistic path to paid/scaled tiers as usage grows.
 
 ## Technical Stack & Team
 - **Hosting**: Vercel
 - **Source control**: GitHub
 - **Frontend/framework**: Next.js (or a comparable React-based framework) — chosen for Vercel-native deployment
 - **Database**: Neon (Postgres), provisioned through Vercel
+- **Budget posture**: free-tier services for now (Vercel, Neon); design should not hard-depend on staying on free tier forever, since scale-up is an explicit long-term goal
 - **Default posture**: where a technology choice isn't dictated above, default to common, portable, well-supported options over niche or vendor-locked ones — keep future migration off Vercel/Neon realistic if ever needed
 - **Team**: 2 developers, working with 1 physician (domain expert/clinical advisor, not implementing code) — small-team scale should inform build choices (favor well-documented, low-ops-overhead tools over infrastructure that needs a dedicated ops role)
 
 ## Explicitly Out of Scope for v1
 - Admin/management view (planned for a later phase)
+- **Motion-capture movement assessment** — camera-based capture/analysis of patient exercises is **not** part of this version. It remains part of the long-term vision (see Vision and Open Considerations) but is deferred; no motion-capture/pose-estimation tooling is needed for v1.
 - HIPAA compliance / production PHI handling (deploying with sample data only for now)
 - Performance tuning, load testing, and infrastructure scaling work aimed at the thousands-of-users target (tracked as a future milestone, not a v1 deliverable)
 
 ## Open Considerations for the Future
+- **Motion-capture movement assessment**: camera-based capture of the patient performing POC exercises, analyzed for correctness, results shared with the physician for progress assessment. Core to the long-term vision, deferred out of v1. When picked back up, revisit CV/pose-estimation tooling choice (e.g., MediaPipe vs. a cloud ML API) and whether processing happens client-side or server-side.
 - **HIPAA readiness**: note architectural decisions now that would ease a future compliance pass (encryption at rest/in transit, audit logging, granular access controls, BAA-ready infrastructure) — to be expanded once we reach a security/compliance stage.
 - **Mobile application**: v1 should not make architectural choices (e.g., web-only APIs, browser-only camera access patterns) that would block a future native or cross-platform mobile client. Prefer a backend/API layer that isn't coupled to a single frontend.
 - **Scheduled exercise reminders**: physicians will eventually be able to configure a recurring reminder/schedule component per patient (do your exercises, log your session). The data model for POC/exercises should be able to carry scheduling metadata later without a redesign.
@@ -63,4 +66,4 @@ Test cases and edge-case coverage are written **before** a feature is implemente
 - **Scale to thousands of users**: v1 is intentionally small-scale, but should avoid decisions that make scaling up painful later (e.g., avoid hardcoding single-tenant assumptions that are expensive to unwind, keep storage/compute for motion-capture media separable from the core app database).
 
 ---
-*Version 4 — updated through Stage 5 (partial: stack + team).*
+*Version 5 — Stage 5 complete; motion-capture moved out of v1 scope, budget constraint recorded.*

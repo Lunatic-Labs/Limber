@@ -16,7 +16,7 @@ Staged, spec-driven approach: lock down vision/scope, then users, then functiona
 - [x] Stage 7: Architecture (schema, API surface, app structure, auth) — complete
 - [x] Database schema drafted (db/schema.ts, Drizzle) — see decisions below
 - [x] Next.js project scaffolded (App Router, TypeScript, Tailwind, Drizzle client, Auth.js skeleton, Route Handlers) — see below
-- [ ] Next: run `npm install` and `npm run db:push` locally, choose an Auth.js provider, then start building real features
+- [ ] Next: run `npm install`, `npm run db:push`, and `npm run db:seed` locally, then start building real features
 
 ## Decisions Log
 - Core value prop: PT communication + POC tracking. (Motion-capture-based progress *assessment* is part of the long-term vision but is **out of v1 scope**.)
@@ -84,7 +84,10 @@ Hand-authored (this session's npm registry access is blocked by org egress polic
 - `src/app/` — App Router; `src/app/page.tsx` is a placeholder home page
 - `src/app/api/health/route.ts` — liveness check Route Handler (`/api/health`), useful to confirm a Vercel deploy is actually serving traffic
 - `src/app/api/auth/[...nextauth]/route.ts` — wires Auth.js's handlers into a Route Handler
-- `auth.ts` — Auth.js config skeleton using the Drizzle adapter against `db/schema.ts`'s users/accounts/sessions/verificationTokens tables, plus a `session` callback that surfaces `role` on the session object. **No provider is configured yet** (email magic link vs. OAuth is still an open decision) — sign-in will not work until one is added.
+- `auth.ts` — Auth.js config using the Drizzle adapter, with a **Credentials (username/password) provider** wired up and working: `authorize()` looks up the user by username, verifies the bcrypt-hashed password, and JWT sessions (required for Credentials) carry `role`/`id`. Email magic-link is still a planned **follow-up**, not built.
+- `lib/password.ts` — bcrypt hash/verify helpers.
+- `src/app/login/page.tsx` — username/password sign-in form (client component, calls Auth.js's `signIn("credentials", ...)`).
+- `db/seed.ts` — creates one test Physician (`physician1`/`changeme123`) and one test Patient (`patient1`/`changeme123`), already linked to each other, via `npm run db:seed`. No self-serve signup page exists yet — accounts are seeded or inserted directly for now.
 - `next-auth.d.ts` — type augmentation so `session.user.role` and `session.user.id` are properly typed
 - `db/index.ts` — Drizzle client (neon-http driver), reads `DATABASE_URL`
 - `drizzle.config.ts` — drizzle-kit config, points at `db/schema.ts`
@@ -94,6 +97,15 @@ Hand-authored (this session's npm registry access is blocked by org egress polic
 
 ### Known gaps (not yet done)
 - Dependencies have never actually been installed or built in this session — this session's network can't reach `registry.npmjs.org` (blocked by org egress policy, exactly like the GitHub push block). **Run `npm install` and `npm run build` locally as a first sanity check** before assuming everything compiles cleanly.
-- No Auth.js provider is wired up yet (open decision: email magic link vs. an OAuth provider).
-- No actual UI/pages beyond the placeholder home page and health check.
-- Schema has not yet been pushed to a real Neon database (`npm run db:push`, once `DATABASE_URL` is set).
+- No actual UI/pages beyond the placeholder home page, health check, and login form — nothing role-gated (e.g. a physician-only dashboard) exists yet; `role` is on the session but nothing checks it.
+- No self-serve signup flow — accounts are created via `db/seed.ts` or direct DB inserts.
+- Email magic-link sign-in is a confirmed follow-up, not built in v1.
+- Schema has not yet been pushed to a real Neon database (`npm run db:push`, once `DATABASE_URL` is set), and the two test accounts haven't been seeded anywhere yet (`npm run db:seed`).
+
+
+## Auth Decision (Stage 7 follow-up)
+- **v1 auth is username + password** (Auth.js Credentials provider), not email magic link. Confirmed by the user; email magic link is explicitly deferred as a follow-up.
+- Schema change: `user` table gained `username` (unique, required) and `passwordHash` (nullable — allows a future email/OAuth-only user with no password). `email` was relaxed from required to optional/unique, to leave room for magic-link later without another migration.
+- Passwords are bcrypt-hashed (`lib/password.ts`), never stored or logged in plaintext.
+- Credentials provider forces **JWT sessions** (NextAuth requirement — a Credentials sign-in has no OAuth account for the adapter to hang a database session off of). `role` and `id` are carried on the JWT and exposed via the `session` callback.
+- Two test accounts are seeded via `db/seed.ts` (`npm run db:seed`): `physician1`/`changeme123` and `patient1`/`changeme123`, already linked (patient assigned to that physician). These are placeholder credentials for local/dev use only — must be changed or removed before any real data touches the app.

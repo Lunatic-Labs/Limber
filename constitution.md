@@ -41,6 +41,14 @@ Test cases and edge-case coverage are written **before** a feature is implemente
 - **Compliance**: no regulatory constraints for v1 — the app runs on sample/test data only, not real patient data. HIPAA is explicitly not a v1 requirement (see "Open Considerations for the Future" for how this is still kept in mind).
 - **Access patterns**: not yet characterized (v1 is the first version; real usage patterns are unknown). Should be revisited once there's real or realistic simulated usage to observe.
 
+## Technical Stack & Team
+- **Hosting**: Vercel
+- **Source control**: GitHub
+- **Frontend/framework**: Next.js (or a comparable React-based framework) — chosen for Vercel-native deployment
+- **Database**: Neon (Postgres), provisioned through Vercel
+- **Default posture**: where a technology choice isn't dictated above, default to common, portable, well-supported options over niche or vendor-locked ones — keep future migration off Vercel/Neon realistic if ever needed
+- **Team**: 2 developers, working with 1 physician (domain expert/clinical advisor, not implementing code) — small-team scale should inform build choices (favor well-documented, low-ops-overhead tools over infrastructure that needs a dedicated ops role)
+
 ## Explicitly Out of Scope for v1
 - Admin/management view (planned for a later phase)
 - HIPAA compliance / production PHI handling (deploying with sample data only for now)
@@ -55,4 +63,4 @@ Test cases and edge-case coverage are written **before** a feature is implemente
 - **Scale to thousands of users**: v1 is intentionally small-scale, but should avoid decisions that make scaling up painful later (e.g., avoid hardcoding single-tenant assumptions that are expensive to unwind, keep storage/compute for motion-capture media separable from the core app database).
 
 ---
-*Version 3 — updated through Stage 4 answers.*
+*Version 4 — updated through Stage 5 (partial: stack + team).*

@@ -12,8 +12,8 @@ Staged, spec-driven approach: lock down vision/scope, then users, then functiona
 - [x] Stage 3: Functional Scope — complete (see constitution.md, "v1 Scope")
 - [x] Stage 4: Non-Functional / Scalability Requirements — complete (see constitution.md, "Non-Functional Requirements (v1)")
 - [x] Stage 5: Technical Constraints & Preferences — complete (see constitution.md, "Technical Stack & Team")
-- [x] Stage 6: Data & Domain Model — complete (see constitution.md, "Data & Domain Model (v1)") — one open item, see below
-- [ ] Next: architecture/schema design, or another stage if you want one added before implementation begins
+- [x] Stage 6: Data & Domain Model — complete (see constitution.md, "Data & Domain Model (v1)")
+- [ ] Stage 7: Architecture (schema, API surface, app structure, auth) — in progress
 
 ## Decisions Log
 - Core value prop: PT communication + POC tracking. (Motion-capture-based progress *assessment* is part of the long-term vision but is **out of v1 scope**.)
@@ -41,7 +41,8 @@ Staged, spec-driven approach: lock down vision/scope, then users, then functiona
   - External integrations of any kind (kept open, none specified yet).
 
 ## Open Questions / Flags for Later Stages
-- **Administrator role**: Stage 1 explicitly deferred an "Admin view" to a later phase, but Stage 6 introduces Administrator as a core domain entity ("oversees patient and physician interaction"). Current constitution.md treats this as: model the role/entity now, but don't build any admin UI in v1. **Please confirm this is the right reading** — or clarify what, if anything, the Administrator should be able to do in v1 (even a limited capability) vs. purely existing as an unused role for now.
+- ~~Administrator role~~ — **confirmed**: model the role/relationship in v1 data layer, no admin UI in v1.
+- ~~Phone-camera capture vs. motion-capture analysis~~ — **confirmed**: capturing/sending photos & videos via phone camera is in v1; automated movement analysis is not.
 - What does "text" communication mean technically — in-app chat, SMS integration, or both? (Leaning in-app chat with rich media; confirm no SMS requirement.)
 - Does "physician" mean licensed PT only, or could it include other care team roles later?
 - Document/video/photo storage: size limits, retention policy, and storage backend on Vercel/Neon (Vercel Blob? external object storage?) — now relevant given phone-camera capture is confirmed for v1.
@@ -50,4 +51,4 @@ Staged, spec-driven approach: lock down vision/scope, then users, then functiona
 - No concrete launch/1yr/3yr numbers exist yet for users or data volume.
 
 ---
-*Last updated after Stage 6 — all six planned stages complete; ready to move into architecture/schema design once the Administrator question is resolved.*
+*Last updated entering Stage 7 (Architecture).*

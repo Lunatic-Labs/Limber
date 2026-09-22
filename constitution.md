@@ -27,8 +27,8 @@ Limber is a physical therapy platform that closes the gap between patients and p
 - Send photos and videos, including capturing them directly from the patient's phone camera in-app (e.g., recording an exercise attempt to send to their physician)
 - Send documents
 - Persistent chat history per patient-physician pair
-- Physician calendar: view all sessions, click into a session to see patient progress/notes, set notification reminders
-- Patient calendar: view upcoming sessions, add notes, request reschedule
+- Physician calendar: view upcoming/scheduled appointments per patient (lightweight — actual sessions happen outside the app; physicians are not required to log structured session data in v1)
+- Patient calendar: view upcoming sessions, flag a reschedule request with a note (not an approval workflow in v1)
 
 ### Quality Bar
 Test cases and edge-case coverage are written **before** a feature is implemented, and the full test suite is run against every new feature added (not just the feature under development). This applies to every core feature above.
@@ -56,14 +56,15 @@ Test cases and edge-case coverage are written **before** a feature is implemente
 - **Team**: 2 developers, working with 1 physician (domain expert/clinical advisor, not implementing code) — small-team scale should inform build choices (favor well-documented, low-ops-overhead tools over infrastructure that needs a dedicated ops role)
 
 ## Data & Domain Model (v1)
-Core entities, at a high level:
-- **Patient** — communicates only with their assigned Physician.
-- **Physician** — can have many Patients.
-- **Administrator** — oversees Patient/Physician interaction at the data-model level; no admin UI in v1 (see Out of Scope).
-- **Plan of Care (POC)** — the entity that connects a Patient and Physician; the anchor for their shared context (messages, sessions, exercises reference back to it).
-- **Message** — text or media sent between a Patient and their Physician, tied to a POC.
-- **Attachment** — photo, video, or document attached to a Message (including media captured directly from the patient's phone camera in-app).
-- Session/appointment concepts exist implicitly via the Patient and Physician calendars (see v1 Core Features) — to be formalized (e.g., a distinct `Session`/`Appointment` entity) as the schema is designed.
+Implemented in `db/schema.ts` (Drizzle). Core entities:
+- **User** — base identity/auth record (Auth.js), with a `role` of `patient`, `physician`, or `administrator`.
+- **Patient** (profile on User) — has exactly one currently-assigned Physician; communicates only with that Physician.
+- **Physician** (profile on User) — can have many Patients.
+- **Administrator** (profile on User) — oversees Patient/Physician interaction at the data-model level; no admin UI in v1 (see Out of Scope).
+- **Plan of Care (POC)** — connects a Patient and Physician for one episode of care. A Patient may have **multiple POCs over time** (sequential episodes, e.g. a knee recovery followed later by a separate shoulder issue). Each POC has its own status (active/completed/archived), messages, and appointments.
+- **Message** — text and/or attachments, always tied to a specific POC (not just the patient-physician pair generally), so conversation history stays grouped by episode of care. No read-receipt/unread tracking in v1.
+- **Attachment** — photo, video, or document attached to a Message, including media captured directly from the patient's phone camera in-app. The file itself lives in Vercel Blob; the row is a pointer + metadata. File type/size limits are an app-level concern, not enforced by the schema.
+- **Appointment** — intentionally lightweight. Sessions themselves happen outside the app; physicians are not required to record structured session data in Limber. This entity exists to drive the Patient/Physician calendar views: scheduled time, status, and a reschedule-request flag with a free-text note (not an approval workflow) when a patient asks to reschedule.
 
 ### External Integrations
 - None required for v1.
@@ -86,4 +87,4 @@ Core entities, at a high level:
 - **External integrations**: none required now, but the architecture should stay open to adding them (notifications, calendar sync, external storage/CDN, analytics, etc.) without a rewrite.
 
 ---
-*Version 7 — Stage 7 complete (architecture: Drizzle, Auth.js, Vercel Blob, Route Handlers, Pusher Channels).*
+*Version 8 — database schema drafted (db/schema.ts); domain model and calendar/appointment scope refined accordingly.*

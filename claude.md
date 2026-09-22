@@ -14,7 +14,8 @@ Staged, spec-driven approach: lock down vision/scope, then users, then functiona
 - [x] Stage 5: Technical Constraints & Preferences — complete (see constitution.md, "Technical Stack & Team")
 - [x] Stage 6: Data & Domain Model — complete (see constitution.md, "Data & Domain Model (v1)")
 - [x] Stage 7: Architecture (schema, API surface, app structure, auth) — complete
-- [ ] Next: database schema design (Drizzle models) and initial project scaffolding
+- [x] Database schema drafted (db/schema.ts, Drizzle) — see decisions below
+- [ ] Next: initial Next.js project scaffolding
 
 ## Decisions Log
 - Core value prop: PT communication + POC tracking. (Motion-capture-based progress *assessment* is part of the long-term vision but is **out of v1 scope**.)
@@ -63,3 +64,14 @@ Staged, spec-driven approach: lock down vision/scope, then users, then functiona
 - **Repo structure**: single Next.js app (frontend + API routes together)
 
 Stage 7 (Architecture) is now complete. Full v1 stack: Next.js (single app) on Vercel, Neon Postgres via Drizzle ORM, Auth.js for authentication, Vercel Blob for file/media storage, Next.js Route Handlers for the API, Pusher Channels for live chat.
+
+
+## Schema Design Decisions (db/schema.ts)
+- **Plans of Care**: a Patient can have multiple POCs over their lifetime (sequential episodes of care), not just one ever. `plan_of_care` has its own status (active/completed/archived) and date range.
+- **Messages**: tied to a specific `plan_of_care_id`, not just the patient-physician pair generally — keeps conversation history grouped by episode of care.
+- **Appointments are intentionally lightweight**: sessions happen outside the app; physicians are not required to record structured session data (vitals, per-session clinical notes, etc.) in v1. The `appointment` table only exists to power the calendar views: scheduled time + status + a reschedule flag/note. Formalized as its own table (resolves the earlier open question about whether Session/Appointment needed its own entity — it does, but a minimal one).
+- **Physician private notes about a patient** (mentioned by the user as a "later on" feature) is confirmed as v2+, not built into v1 schema — tracked already under Open Considerations for the Future in constitution.md.
+- **No read receipts / unread tracking** in v1 `message` table.
+- **Attachment constraints** (file type, size limits) are an app-level validation concern, not a schema concern — `attachment` table just stores the Vercel Blob URL + metadata.
+- **Auth.js tables** (`user`, `account`, `session`, `verification_token`) follow the standard `@auth/drizzle-adapter` shape, with `role` added to `user` to distinguish Patient/Physician/Administrator at the identity level.
+- **Role profile tables** (`patient_profile`, `physician_profile`, `administrator_profile`) keep role-specific fields off the auth-owned `user` table. `patient_profile.physician_user_id` records the patient's *currently assigned* physician (separate from each POC's own `physician_user_id`, which preserves history if a patient is ever reassigned).

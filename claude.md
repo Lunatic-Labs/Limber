@@ -4,45 +4,50 @@
 Running context for whoever (or whichever session) picks up work on Limber — captures decisions made, open questions, and where we are in the spec-driven process.
 
 ## Process
-Staged, spec-driven approach: lock down vision/scope, then users, then functional detail (with acceptance criteria), then non-functional/scalability requirements, then technical architecture — each stage documented before moving to the next.
+Staged, spec-driven approach: lock down vision/scope, then users, then functional detail (with acceptance criteria), then non-functional/scalability requirements, then technical architecture, then data/domain model — each stage documented before moving to the next.
 
 ## Status
 - [x] Stage 1: Problem & Vision — complete (see constitution.md)
 - [x] Stage 2: Users & Personas — complete (see constitution.md, "Users & Access Model")
-- [x] Stage 3: Functional Scope — complete (see constitution.md, "v1 Scope") — revised: motion-capture removed from v1, see below
+- [x] Stage 3: Functional Scope — complete (see constitution.md, "v1 Scope")
 - [x] Stage 4: Non-Functional / Scalability Requirements — complete (see constitution.md, "Non-Functional Requirements (v1)")
 - [x] Stage 5: Technical Constraints & Preferences — complete (see constitution.md, "Technical Stack & Team")
-- [ ] Stage 6: Data & Domain Model
+- [x] Stage 6: Data & Domain Model — complete (see constitution.md, "Data & Domain Model (v1)") — one open item, see below
+- [ ] Next: architecture/schema design, or another stage if you want one added before implementation begins
 
 ## Decisions Log
-- Core value prop: PT communication + POC tracking. (Motion-capture-based progress assessment is part of the long-term vision but is **out of v1 scope** — see below.)
+- Core value prop: PT communication + POC tracking. (Motion-capture-based progress *assessment* is part of the long-term vision but is **out of v1 scope**.)
 - HIPAA: deferred; sample data only for v1, but flag compliance-friendly architectural choices as we go.
-- Admin view: deferred to a later phase.
-- Roles: Patient and Physician only for v1. One physician per patient; many patients per physician. No patient-to-patient interaction or visibility.
+- Roles: Patient and Physician only for v1 UI. One physician per patient; many patients per physician. No patient-to-patient interaction or visibility.
+- **Administrator** added as a domain-model role in Stage 6 (oversees patient/physician interaction) — modeled at the data layer, but no admin UI in v1. Flagged below for confirmation since it wasn't part of earlier stages.
 - Communication channel: in-app messaging (text, photos, videos, documents) with persistent chat history, scoped strictly to a patient's own physician.
+- **Phone camera capture (Stage 6)**: patients capture photos/videos of themselves doing exercises directly via their phone camera in-app, to send as message attachments. This is a v1 feature. It is distinct from "motion-capture movement assessment" (automated analysis of that footage), which remains out of v1 — v1 only captures and sends the media, it does not analyze it.
 - Testing philosophy: write test cases and edge-case coverage before implementing a feature; run the full suite against every new feature, not just the one being added.
-- Scale target: v1 launches small/low-volume with sample data; the long-term ambition is thousands of users, but v1 itself is not being built or tuned for that scale — just shouldn't be architected in a way that blocks it.
+- Scale target: v1 launches small/low-volume with sample data; long-term ambition is thousands of users; v1 shouldn't be architected in a way that blocks that.
 - Availability/latency: no SLA or latency targets for v1; downtime is largely tolerable.
-- Compliance: none required for v1 (sample data only, no real PHI); HIPAA readiness is a forward-looking consideration, not a v1 requirement.
-- Budget: free-tier infrastructure for now (Vercel + Neon free tiers); scale-up is a known future need, so avoid decisions that make leaving free tier hard.
-- Stack: Next.js (or comparable) on Vercel, Neon Postgres via Vercel, GitHub for source control. Default to common/portable choices elsewhere.
-- Team: 2 developers + 1 physician as clinical advisor (not coding). Favor well-documented, low-ops tools over anything needing dedicated infra/ops work.
-- **SCOPE CHANGE (Stage 5)**: Motion-capture movement assessment is explicitly **not needed for this version**. It was originally listed as a v1 core feature (Stage 1/3) but has been moved to "Open Considerations for the Future" in constitution.md. No motion-capture/pose-estimation tooling decision is needed right now.
+- Compliance: none required for v1 (sample data only, no real PHI).
+- Budget: free-tier infrastructure for now (Vercel + Neon free tiers); scale-up is a known future need.
+- Stack: Next.js (or comparable) on Vercel, Neon Postgres via Vercel, GitHub for source control.
+- Team: 2 developers + 1 physician as clinical advisor (not coding).
+- Domain entities (v1): Patient, Physician, Administrator, Plan of Care (POC, connects a Patient and Physician), Message, Attachment. Session/Appointment concepts exist via the calendars but aren't yet formalized as a distinct entity.
+- External integrations: none required for v1, but architecture should stay open to adding them later (notifications, calendar sync, external storage, analytics, etc.).
 - v2+ items that should shape v1 architecture (not to be built now, but not to be architected against):
-  - Motion-capture movement assessment (moved out of v1 — see scope change above).
+  - Motion-capture movement assessment (analysis of exercise footage) — capturing/sending the footage itself IS in v1; analyzing it is not.
   - Mobile app — keep backend/API decoupled from a single (web) frontend.
-  - Physician-configured exercise/reminder schedule — POC/exercise data model should be able to carry scheduling metadata later.
-  - Private physician-only notes on a patient — access control should support per-note, per-role visibility, not just per-conversation visibility.
-  - Progress/recovery trend graphs from motion-capture data — store motion-capture results as structured, queryable data, not just raw media, so trends can be computed without reprocessing.
-  - Eventual scale to thousands of users — avoid single-tenant-only assumptions and keep motion-capture media storage/compute separable from the core app database, for whenever it's added back.
+  - Physician-configured exercise/reminder schedule.
+  - Private physician-only notes on a patient.
+  - Progress/recovery trend graphs from motion-capture data.
+  - Eventual scale to thousands of users.
+  - External integrations of any kind (kept open, none specified yet).
 
 ## Open Questions / Flags for Later Stages
-- What does "text" communication mean technically — in-app chat, SMS integration, or both? (Stage 2 answer leans toward in-app chat with rich media; confirm no SMS requirement.)
-- What defines "completing the POC correctly" — deferred along with motion capture; revisit when that feature is picked back up.
+- **Administrator role**: Stage 1 explicitly deferred an "Admin view" to a later phase, but Stage 6 introduces Administrator as a core domain entity ("oversees patient and physician interaction"). Current constitution.md treats this as: model the role/entity now, but don't build any admin UI in v1. **Please confirm this is the right reading** — or clarify what, if anything, the Administrator should be able to do in v1 (even a limited capability) vs. purely existing as an unused role for now.
+- What does "text" communication mean technically — in-app chat, SMS integration, or both? (Leaning in-app chat with rich media; confirm no SMS requirement.)
 - Does "physician" mean licensed PT only, or could it include other care team roles later?
-- Document/video/photo storage: size limits, retention policy, and storage backend on Vercel/Neon (Vercel Blob? external object storage?) — relevant now that hosting stack is chosen, even without motion-capture media yet.
+- Document/video/photo storage: size limits, retention policy, and storage backend on Vercel/Neon (Vercel Blob? external object storage?) — now relevant given phone-camera capture is confirmed for v1.
 - Test strategy: what test framework(s)/tooling will be used to write acceptance tests ahead of features, compatible with Next.js.
-- No concrete launch/1yr/3yr numbers exist yet for users or data volume — worth revisiting once there's a rough go-to-market plan, since "thousands of users eventually" alone doesn't pin down infra sizing.
+- `Session`/`Appointment` entity: calendars imply sessions/appointments as a concept — should this be formalized as its own entity distinct from POC/Message in the schema design pass?
+- No concrete launch/1yr/3yr numbers exist yet for users or data volume.
 
 ---
-*Last updated after Stage 5 — ready to move to Stage 6: Data & Domain Model.*
+*Last updated after Stage 6 — all six planned stages complete; ready to move into architecture/schema design once the Administrator question is resolved.*

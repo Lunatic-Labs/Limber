@@ -15,6 +15,7 @@ Limber is a physical therapy platform that closes the gap between patients and p
 - A physician can have many patients; a patient has exactly one physician.
 - Patients cannot see or interact with other patients — no patient-to-patient communication or visibility.
 - A patient can only message their own physician, and vice versa (access is scoped per patient-physician relationship, not open to all physicians/patients on the platform).
+- **Administrator** exists as a domain role (oversees patient/physician interaction), modeled in the data layer from v1, but the admin-facing UI/management view remains deferred (see "Explicitly Out of Scope for v1"). *(Flagged for confirmation — see claude.md open questions.)*
 - Target technical sophistication: average user — if someone can use a standard messaging app (texting, iMessage, WhatsApp), they should be able to use Limber without training.
 
 ## v1 Scope
@@ -23,8 +24,7 @@ Limber is a physical therapy platform that closes the gap between patients and p
 - Separate login/auth flows for Patient and Physician roles
 - Patient ↔ Physician messaging, scoped to each patient's own physician (no cross-patient visibility)
 - Send text messages
-- Send photos
-- Send videos
+- Send photos and videos, including capturing them directly from the patient's phone camera in-app (e.g., recording an exercise attempt to send to their physician)
 - Send documents
 - Persistent chat history per patient-physician pair
 - Physician calendar: view all sessions, click into a session to see patient progress/notes, set notification reminders
@@ -50,9 +50,23 @@ Test cases and edge-case coverage are written **before** a feature is implemente
 - **Default posture**: where a technology choice isn't dictated above, default to common, portable, well-supported options over niche or vendor-locked ones — keep future migration off Vercel/Neon realistic if ever needed
 - **Team**: 2 developers, working with 1 physician (domain expert/clinical advisor, not implementing code) — small-team scale should inform build choices (favor well-documented, low-ops-overhead tools over infrastructure that needs a dedicated ops role)
 
+## Data & Domain Model (v1)
+Core entities, at a high level:
+- **Patient** — communicates only with their assigned Physician.
+- **Physician** — can have many Patients.
+- **Administrator** — oversees Patient/Physician interaction at the data-model level; no admin UI in v1 (see Out of Scope).
+- **Plan of Care (POC)** — the entity that connects a Patient and Physician; the anchor for their shared context (messages, sessions, exercises reference back to it).
+- **Message** — text or media sent between a Patient and their Physician, tied to a POC.
+- **Attachment** — photo, video, or document attached to a Message (including media captured directly from the patient's phone camera in-app).
+- Session/appointment concepts exist implicitly via the Patient and Physician calendars (see v1 Core Features) — to be formalized (e.g., a distinct `Session`/`Appointment` entity) as the schema is designed.
+
+### External Integrations
+- None required for v1.
+- Design should not preclude adding integrations later (e.g., notifications, calendar sync, external storage, analytics) — avoid hardcoding assumptions that would make bolting on an external API painful down the line.
+
 ## Explicitly Out of Scope for v1
-- Admin/management view (planned for a later phase)
-- **Motion-capture movement assessment** — camera-based capture/analysis of patient exercises is **not** part of this version. It remains part of the long-term vision (see Vision and Open Considerations) but is deferred; no motion-capture/pose-estimation tooling is needed for v1.
+- Admin/management **UI** (the Administrator role exists in the data model, but no admin-facing views or workflows are built in v1)
+- **Motion-capture movement assessment** — camera-based capture/analysis of patient exercises for automated correctness scoring is **not** part of this version. Note: this is distinct from the v1 feature of patients using their phone camera to capture and send photos/videos as message attachments, which *is* in v1 — motion capture refers specifically to analyzing that movement, not just capturing and sending media.
 - HIPAA compliance / production PHI handling (deploying with sample data only for now)
 - Performance tuning, load testing, and infrastructure scaling work aimed at the thousands-of-users target (tracked as a future milestone, not a v1 deliverable)
 
@@ -64,6 +78,7 @@ Test cases and edge-case coverage are written **before** a feature is implemente
 - **Private physician notes**: physicians will eventually be able to attach notes to a patient that are visible only to that physician (not shared with the patient or other physicians). Access-control model should support per-note, per-role visibility, not just per-conversation visibility.
 - **Progress/recovery trend graphs**: physicians will eventually see graphs of patient activity and recovery trends derived from motion-capture and session data. Motion-capture results should be stored as structured, queryable data (not just raw media) so trends can be computed later without reprocessing history.
 - **Scale to thousands of users**: v1 is intentionally small-scale, but should avoid decisions that make scaling up painful later (e.g., avoid hardcoding single-tenant assumptions that are expensive to unwind, keep storage/compute for motion-capture media separable from the core app database).
+- **External integrations**: none required now, but the architecture should stay open to adding them (notifications, calendar sync, external storage/CDN, analytics, etc.) without a rewrite.
 
 ---
-*Version 5 — Stage 5 complete; motion-capture moved out of v1 scope, budget constraint recorded.*
+*Version 6 — Stage 6 complete (data/domain model, phone-camera capture clarified as v1, admin role flagged for confirmation).*

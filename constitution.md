@@ -87,4 +87,4 @@ Implemented in `db/schema.ts` (Drizzle). Core entities:
 - **External integrations**: none required now, but the architecture should stay open to adding them (notifications, calendar sync, external storage/CDN, analytics, etc.) without a rewrite.
 
 ---
-*Version 10 — v1 auth finalized as username/password (Credentials provider); email magic-link deferred as a follow-up. See claude.md for scaffold details, test accounts, and known gaps.*
+*Version 11 — role-gated Physician/Patient UI added (middleware + dashboards). See claude.md for scaffold details, test accounts, and known gaps.*

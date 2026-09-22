@@ -16,7 +16,10 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"],
-      "@/db/*": ["./db/*"]
+      "@/db": ["./db/index.ts"],
+      "@/db/*": ["./db/*"],
+      "@/auth": ["./auth.ts"],
+      "@/lib/*": ["./lib/*"]
     }
   },
   "include": [

@@ -16,7 +16,8 @@ Staged, spec-driven approach: lock down vision/scope, then users, then functiona
 - [x] Stage 7: Architecture (schema, API surface, app structure, auth) — complete
 - [x] Database schema drafted (db/schema.ts, Drizzle) — see decisions below
 - [x] Next.js project scaffolded (App Router, TypeScript, Tailwind, Drizzle client, Auth.js skeleton, Route Handlers) — see below
-- [ ] Next: run `npm install`, `npm run db:push`, and `npm run db:seed` locally, then start building real features
+- [x] Role-gated Physician/Patient UI (middleware + dashboards) — see below
+- [ ] Next: run `npm install`, `npm run db:push`, and `npm run db:seed` locally to actually try it, then build messaging + calendars
 
 ## Decisions Log
 - Core value prop: PT communication + POC tracking. (Motion-capture-based progress *assessment* is part of the long-term vision but is **out of v1 scope**.)
@@ -97,7 +98,8 @@ Hand-authored (this session's npm registry access is blocked by org egress polic
 
 ### Known gaps (not yet done)
 - Dependencies have never actually been installed or built in this session — this session's network can't reach `registry.npmjs.org` (blocked by org egress policy, exactly like the GitHub push block). **Run `npm install` and `npm run build` locally as a first sanity check** before assuming everything compiles cleanly.
-- No actual UI/pages beyond the placeholder home page, health check, and login form — nothing role-gated (e.g. a physician-only dashboard) exists yet; `role` is on the session but nothing checks it.
+- Physician and Patient dashboards exist but are minimal (patient list; physician name + plans of care list) — no messaging or calendar UI yet.
+- Administrator has no UI at all in v1 (by design — see constitution.md); a signed-in administrator lands on a plain placeholder at `/`.
 - No self-serve signup flow — accounts are created via `db/seed.ts` or direct DB inserts.
 - Email magic-link sign-in is a confirmed follow-up, not built in v1.
 - Schema has not yet been pushed to a real Neon database (`npm run db:push`, once `DATABASE_URL` is set), and the two test accounts haven't been seeded anywhere yet (`npm run db:seed`).
@@ -109,3 +111,13 @@ Hand-authored (this session's npm registry access is blocked by org egress polic
 - Passwords are bcrypt-hashed (`lib/password.ts`), never stored or logged in plaintext.
 - Credentials provider forces **JWT sessions** (NextAuth requirement — a Credentials sign-in has no OAuth account for the adapter to hang a database session off of). `role` and `id` are carried on the JWT and exposed via the `session` callback.
 - Two test accounts are seeded via `db/seed.ts` (`npm run db:seed`): `physician1`/`changeme123` and `patient1`/`changeme123`, already linked (patient assigned to that physician). These are placeholder credentials for local/dev use only — must be changed or removed before any real data touches the app.
+
+
+## Role-Gated UI
+- `src/middleware.ts` — gates `/physician/*` and `/patient/*`: signed-out users are redirected to `/login` (with a `callbackUrl`), signed-in users with the wrong role are redirected to `/`.
+- `src/app/page.tsx` (`/`) — signed-out -> `/login`; physician -> `/physician`; patient -> `/patient`; administrator (or any other/no dashboard role) -> plain placeholder, since no admin UI exists in v1.
+- `src/app/physician/layout.tsx` + `page.tsx` — re-checks role server-side (defense in depth beyond middleware) and lists the physician's assigned patients (name + username), queried via `patient_profile.physician_user_id`.
+- `src/app/patient/layout.tsx` + `page.tsx` — re-checks role, shows the patient's assigned physician and their list of Plans of Care (title + status).
+- `src/components/sign-out-button.tsx` — shared sign-out control used in both layouts' headers.
+- `tsconfig.json` — added `@/db`, `@/db/*`, `@/auth`, `@/lib/*` path aliases so app code doesn't need long relative import chains up to the project root.
+- Not built yet: any per-patient detail view for the physician (messages, plan-of-care detail), and no messaging/calendar UI at all — both dashboards are just the "you're logged in as the right role and here's your list" shell to build on top of.

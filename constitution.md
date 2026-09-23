@@ -47,7 +47,7 @@ Test cases and edge-case coverage are written **before** a feature is implemente
 - **Frontend/framework**: Next.js — single app (frontend + API together), chosen for Vercel-native deployment
 - **Database**: Neon (Postgres), provisioned through Vercel
 - **ORM**: Drizzle
-- **Authentication**: Auth.js (NextAuth)
+- **Authentication**: Auth.js (NextAuth), **username + password (Credentials provider) for v1** — bcrypt-hashed passwords, JWT sessions. Email magic-link is a confirmed follow-up, not v1.
 - **File/media storage**: Vercel Blob (photos, videos, documents — kept out of Postgres)
 - **API style**: Next.js Route Handlers
 - **Real-time messaging**: Pusher Channels (managed pub/sub for live patient↔physician chat, since Vercel Route Handlers can't hold persistent connections themselves). Ably is an equivalent fallback if ever needed.
@@ -87,4 +87,4 @@ Implemented in `db/schema.ts` (Drizzle). Core entities:
 - **External integrations**: none required now, but the architecture should stay open to adding them (notifications, calendar sync, external storage/CDN, analytics, etc.) without a rewrite.
 
 ---
-*Version 9 — Next.js project scaffolded (App Router, TypeScript, Tailwind, Drizzle client, Auth.js skeleton). See claude.md for scaffold details and known gaps (dependencies not yet installed, no auth provider wired up).*
+*Version 11 — role-gated Physician/Patient UI added (middleware + dashboards). See claude.md for scaffold details, test accounts, and known gaps.*

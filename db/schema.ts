@@ -50,9 +50,18 @@ export const appointmentStatusEnum = pgEnum("appointment_status", [
 export const users = pgTable("user", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name"),
-  email: text("email").notNull().unique(),
+  // Nullable for now: v1 auth is username/password (see `username` /
+  // `passwordHash` below). Email is kept on the table, unique but
+  // optional, so the planned future email-magic-link option can be
+  // added without a schema change.
+  email: text("email").unique(),
   emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
+  // v1 auth: username/password (Credentials provider). Nullable
+  // passwordHash so a future email/OAuth-only user isn't forced to
+  // have one.
+  username: text("username").notNull().unique(),
+  passwordHash: text("password_hash"),
   role: userRoleEnum("role").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

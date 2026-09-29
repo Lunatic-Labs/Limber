@@ -1,5 +1,10 @@
 import { defineConfig } from "drizzle-kit";
 
+// drizzle-kit does not load .env.local on its own (only Next.js does).
+try {
+  process.loadEnvFile(".env.local");
+} catch {}
+
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set (needed for drizzle-kit).");
 }

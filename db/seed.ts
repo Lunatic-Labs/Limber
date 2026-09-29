@@ -1,7 +1,6 @@
 // Creates one test Physician and one test Patient account, assigned
 // to each other, so there's something to log in as during v1
 // development. Run with: npm run db:seed
-//
 // Not meant for production data — this is sample/test data only,
 // per the project's v1 scope (see constitution.md).
 

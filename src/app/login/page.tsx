@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { DEV_PATIENT_PREVIEW } from "@/lib/dev-preview";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -83,6 +85,16 @@ export default function LoginPage() {
           {submitting ? "Signing in..." : "Sign in"}
         </button>
       </form>
+
+      {/* TEMPORARY: remove once the database/auth works. */}
+      {DEV_PATIENT_PREVIEW && (
+        <Link
+          href="/patient"
+          className="mt-4 rounded border border-dashed border-amber-500 px-4 py-2 text-sm text-amber-700"
+        >
+          Dev: view patient screen (no login)
+        </Link>
+      )}
     </main>
   );
 }

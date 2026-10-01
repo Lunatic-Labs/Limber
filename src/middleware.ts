@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { DEV_PATIENT_PREVIEW } from "@/lib/dev-preview";
 
 // Route-level gate: anything under /physician requires role
 // "physician", anything under /patient requires role "patient".
@@ -15,6 +16,11 @@ export default auth((req) => {
   const isPatientRoute = nextUrl.pathname.startsWith("/patient");
 
   if (!isPhysicianRoute && !isPatientRoute) {
+    return NextResponse.next();
+  }
+
+  // TEMPORARY dev bypass: see lib/dev-preview.ts.
+  if (DEV_PATIENT_PREVIEW && isPatientRoute) {
     return NextResponse.next();
   }
 

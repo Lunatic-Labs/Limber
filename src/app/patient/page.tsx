@@ -1,25 +1,41 @@
 import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
+import {
+  DEV_PATIENT_PREVIEW,
+  MOCK_PATIENT_DASHBOARD,
+} from "@/lib/dev-preview";
 import { patientProfiles, plansOfCare, users } from "@/db/schema";
 
 export default async function PatientDashboard() {
-  const session = await auth();
-  const patientId = session!.user.id;
+  let profile: { physicianName: string | null; physicianUsername: string } | undefined;
+  let pocs: { id: string; title: string; status: string }[];
 
-  const [profile] = await db
-    .select({
-      physicianName: users.name,
-      physicianUsername: users.username,
-    })
-    .from(patientProfiles)
-    .innerJoin(users, eq(patientProfiles.physicianUserId, users.id))
-    .where(eq(patientProfiles.userId, patientId));
+  if (DEV_PATIENT_PREVIEW) {
+    // TEMPORARY: mock data, no DB (see lib/dev-preview.ts).
+    profile = {
+      physicianName: MOCK_PATIENT_DASHBOARD.physician.name,
+      physicianUsername: MOCK_PATIENT_DASHBOARD.physician.username,
+    };
+    pocs = MOCK_PATIENT_DASHBOARD.pocs;
+  } else {
+    const session = await auth();
+    const patientId = session!.user.id;
 
-  const pocs = await db
-    .select()
-    .from(plansOfCare)
-    .where(eq(plansOfCare.patientUserId, patientId));
+    [profile] = await db
+      .select({
+        physicianName: users.name,
+        physicianUsername: users.username,
+      })
+      .from(patientProfiles)
+      .innerJoin(users, eq(patientProfiles.physicianUserId, users.id))
+      .where(eq(patientProfiles.userId, patientId));
+
+    pocs = await db
+      .select()
+      .from(plansOfCare)
+      .where(eq(plansOfCare.patientUserId, patientId));
+  }
 
   return (
     <main className="space-y-6">

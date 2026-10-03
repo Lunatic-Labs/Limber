@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -42,15 +43,25 @@ export default async function PatientDashboard() {
         ) : (
           <ul className="divide-y divide-gray-200 rounded border border-gray-200">
             {pocs.map((poc) => (
-              <li key={poc.id} className="px-4 py-3">
-                <p className="font-medium">{poc.title}</p>
-                <p className="text-sm text-gray-500 capitalize">{poc.status}</p>
+              <li key={poc.id}>
+                <Link
+                  href={`/patient/plans/${poc.id}`}
+                  className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
+                >
+                  <div>
+                    <p className="font-medium">{poc.title}</p>
+                    <p className="text-sm text-gray-500 capitalize">
+                      {poc.status}
+                    </p>
+                  </div>
+                  <span className="text-sm text-gray-500">Messages &rsaquo;</span>
+                </Link>
               </li>
             ))}
           </ul>
         )}
       </section>
-      {/* TODO: messaging and calendar views land here once built. */}
+      {/* TODO: calendar view lands here once built. */}
     </main>
   );
 }

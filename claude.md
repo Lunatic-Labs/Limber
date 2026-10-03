@@ -121,3 +121,12 @@ Hand-authored (this session's npm registry access is blocked by org egress polic
 - `src/components/sign-out-button.tsx` — shared sign-out control used in both layouts' headers.
 - `tsconfig.json` — added `@/db`, `@/db/*`, `@/auth`, `@/lib/*` path aliases so app code doesn't need long relative import chains up to the project root.
 - Not built yet: any per-patient detail view for the physician (messages, plan-of-care detail), and no messaging/calendar UI at all — both dashboards are just the "you're logged in as the right role and here's your list" shell to build on top of.
+
+
+## Chat (text messaging) — initial version
+- One conversation per Plan of Care. Same UI for both roles: `src/components/chat/chat-view.tsx` (client) + `chat-screen.tsx` (server wrapper that checks access and loads history). Routes: `/patient/plans/[id]` and `/physician/plans/[id]`; both dashboards link to them.
+- Style: iMessage-like, but gray (own messages mid-gray, other party light gray) and less rounded (`rounded-lg`, small-radius "tail" on the last bubble in a group).
+- API: `GET/POST /api/plans/[id]/messages` (`?after=<ISO>` for catch-up). Access is checked in `lib/chat.ts#getPlanForUser` (must be that plan's patient or physician); non-members get 404.
+- Realtime: private Pusher channel `private-poc-<planId>`, authorized by `/api/pusher/auth`. If Pusher env vars are missing or subscription fails, the UI polls every 4s instead.
+- Text only for now; attachments (Vercel Blob), phone-camera capture, older-history paging (latest 200 load), and plan-of-care creation UI are not built yet.
+- `db/seed.ts` is now re-runnable and also creates a sample plan of care with 3 messages.

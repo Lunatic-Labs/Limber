@@ -31,7 +31,4 @@ next-env.d.ts
 # drizzle
 /drizzle/
 
-# automatic backup files
-package-lock.json
-package.json
 

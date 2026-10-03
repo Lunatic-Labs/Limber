@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "../auth.config";
+
+// Edge-safe auth instance: no DB/bcrypt imports (see auth.config.ts).
+const { auth } = NextAuth(authConfig);
 
 // Route-level gate: anything under /physician requires role
 // "physician", anything under /patient requires role "patient".

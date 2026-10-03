@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { db } from "./db";
 import { accounts, sessions, users, verificationTokens } from "./db/schema";
 import { verifyPassword } from "./lib/password";
+import { authConfig } from "./auth.config";
 
 // v1 auth: username + password only (Credentials provider). Email
 // magic link is a planned follow-up, not built yet — the adapter is
@@ -15,15 +16,13 @@ import { verifyPassword } from "./lib/password";
 // Credentials is a provider, since a Credentials sign-in has no
 // OAuth account for the adapter to link a database session to.
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   adapter: DrizzleAdapter(db, {
     usersTable: users,
     accountsTable: accounts,
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
-  session: {
-    strategy: "jwt",
-  },
   providers: [
     Credentials({
       name: "Username and password",
@@ -61,28 +60,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // TODO (follow-up): add an email magic-link provider once
     // outbound email is set up.
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      // `user` is only present on initial sign-in; persist role/id
-      // onto the token so every subsequent request has it without
-      // an extra DB lookup.
-      if (user) {
-        // @ts-expect-error -- role is a custom field, see next-auth.d.ts
-        token.role = user.role;
-        token.sub = user.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub as string;
-        // @ts-expect-error -- role is a custom field, see next-auth.d.ts
-        session.user.role = token.role;
-      }
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/login",
-  },
 });

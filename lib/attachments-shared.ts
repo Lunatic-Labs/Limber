@@ -165,7 +165,7 @@ export function attachmentContentHeaders(a: {
     (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
   );
   return {
-    "Content-Type": a.mimeType,
+    "Content-Type": a.mimeType.split(";")[0].trim().toLowerCase(),
     "Content-Disposition": `${disposition}; filename="${ascii}"; filename*=UTF-8''${encoded}`,
     "X-Content-Type-Options": "nosniff",
     "Cache-Control": "private, no-store",

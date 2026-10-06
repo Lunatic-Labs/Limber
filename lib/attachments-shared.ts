@@ -159,15 +159,15 @@ export function attachmentContentHeaders(a: {
   const disposition = a.kind === "document" ? "attachment" : "inline";
   // Plain-ASCII fallback with no quotes/control chars, plus the real
   // name percent-encoded (RFC 5987).
-  const ascii = a.fileName.replace(/[^\x20-\x7e]|["\;]/g, "_");
+  const ascii = a.fileName.replace(/[^\x20-\x7e]|["\\;]/g, "_");
   const encoded = encodeURIComponent(a.fileName).replace(
     /['()*]/g,
     (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
   );
   return {
-    "Content-Type": a.mimeType,
+    "Content-Type": a.mimeType.split(";")[0].trim().toLowerCase(),
     "Content-Disposition": `${disposition}; filename="${ascii}"; filename*=UTF-8''${encoded}`,
     "X-Content-Type-Options": "nosniff",
-    "Cache-Control": "private, max-age=3600",
+    "Cache-Control": "private, no-store",
   };
 }

@@ -159,7 +159,7 @@ export function attachmentContentHeaders(a: {
   const disposition = a.kind === "document" ? "attachment" : "inline";
   // Plain-ASCII fallback with no quotes/control chars, plus the real
   // name percent-encoded (RFC 5987).
-  const ascii = a.fileName.replace(/[^\x20-\x7e]|["\;]/g, "_");
+  const ascii = a.fileName.replace(/[^\x20-\x7e]|["\\;]/g, "_");
   const encoded = encodeURIComponent(a.fileName).replace(
     /['()*]/g,
     (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`

@@ -10,16 +10,92 @@ import {
   useState,
 } from "react";
 import type PusherClient from "pusher-js";
+import { upload } from "@vercel/blob/client";
+import {
+  FILE_INPUT_ACCEPT,
+  MAX_ATTACHMENTS_PER_MESSAGE,
+  attachmentPathPrefix,
+  validateFileForUpload,
+} from "@/lib/attachments-shared";
 import {
   MESSAGE_MAX_LENGTH,
   NEW_MESSAGE_EVENT,
   planChannelName,
+  type ChatAttachment,
   type ChatMessage,
 } from "@/lib/chat-shared";
 
 // A message the user just sent that the server hasn't confirmed yet
 // (or that failed to send). Real messages never have `status`.
 type LocalMessage = ChatMessage & { status?: "sending" | "failed" };
+
+// A file the user picked that is uploading to Blob (or failed to).
+// Once `attachment` is set it's ready to be sent with the message.
+type PendingFile = {
+  key: string;
+  name: string;
+  progress: number; // 0-100
+  error?: string;
+  attachment?: ChatAttachment;
+};
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function safeFileName(name: string): string {
+  return name.replace(/[^\w.\- ]+/g, "_").slice(0, 100) || "file";
+}
+
+function AttachmentView({ a }: { a: ChatAttachment }) {
+  // Browsers other than Safari can't show HEIC, so a failed image or
+  // video falls back to a plain download link.
+  const [broken, setBroken] = useState(false);
+
+  if (a.kind === "photo" && !broken) {
+    return (
+      <a href={a.url} target="_blank" rel="noopener noreferrer">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={a.url}
+          alt={a.fileName}
+          loading="lazy"
+          onError={() => setBroken(true)}
+          className="max-h-72 max-w-full rounded-lg object-cover"
+        />
+      </a>
+    );
+  }
+  if (a.kind === "video" && !broken) {
+    return (
+      <video
+        src={a.url}
+        controls
+        playsInline
+        preload="metadata"
+        aria-label={a.fileName}
+        onError={() => setBroken(true)}
+        className="max-h-72 max-w-full rounded-lg bg-black"
+      />
+    );
+  }
+  return (
+    <a
+      href={a.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      download={a.fileName}
+      className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 hover:bg-gray-50"
+    >
+      <span aria-hidden="true">📄</span>
+      <span className="min-w-0">
+        <span className="block truncate">{a.fileName}</span>
+        <span className="block text-xs text-gray-500">{formatSize(a.size)}</span>
+      </span>
+    </a>
+  );
+}
 
 type Props = {
   planOfCareId: string;
@@ -77,6 +153,8 @@ export function ChatView({
 }: Props) {
   const [messages, setMessages] = useState<LocalMessage[]>(initialMessages);
   const [draft, setDraft] = useState("");
+  const [files, setFiles] = useState<PendingFile[]>([]);
+  const [attachError, setAttachError] = useState<string | null>(null);
   // Timestamps depend on the viewer's timezone/clock, so they're only
   // rendered after mount to avoid a server/client hydration mismatch.
   const [mounted, setMounted] = useState(false);
@@ -85,6 +163,8 @@ export function ChatView({
 
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const stickToBottom = useRef(true);
   const pusherRef = useRef<PusherClient | null>(null);
   const latestConfirmed = useRef("");
@@ -194,7 +274,7 @@ export function ChatView({
   }, [draft]);
 
   const send = useCallback(
-    async (text: string, retryId?: string) => {
+    async (text: string, attachments: ChatAttachment[], retryId?: string) => {
       const tmpId = retryId ?? `tmp-${Date.now()}-${tmpCounter.current++}`;
       stickToBottom.current = true;
 
@@ -209,6 +289,7 @@ export function ChatView({
                 id: tmpId,
                 senderUserId: currentUserId,
                 body: text,
+                attachments,
                 createdAt: new Date().toISOString(),
                 status: "sending" as const,
               },
@@ -223,7 +304,15 @@ export function ChatView({
             "Content-Type": "application/json",
             ...(socketId ? { "X-Pusher-Socket-Id": socketId } : {}),
           },
-          body: JSON.stringify({ body: text }),
+          body: JSON.stringify({
+            body: text,
+            attachments: attachments.map((a) => ({
+              url: a.url,
+              fileName: a.fileName,
+              mimeType: a.mimeType,
+              size: a.size,
+            })),
+          }),
         });
         if (!res.ok) throw new Error("send failed");
         const data: { message: ChatMessage } = await res.json();
@@ -244,11 +333,83 @@ export function ChatView({
     [currentUserId, planOfCareId]
   );
 
+  const uploading = files.some((f) => !f.attachment && !f.error);
+  const readyFiles = files.flatMap((f) => (f.attachment ? [f.attachment] : []));
+  const canSend =
+    !uploading && (draft.trim().length > 0 || readyFiles.length > 0);
+
+  function updateFile(key: string, patch: Partial<PendingFile>) {
+    setFiles((prev) => prev.map((f) => (f.key === key ? { ...f, ...patch } : f)));
+  }
+
+  // Upload straight to Vercel Blob (the API route only hands out a
+  // token), so large videos never pass through a serverless function.
+  async function uploadFile(key: string, file: File) {
+    try {
+      const blob = await upload(
+        `${attachmentPathPrefix(planOfCareId)}${safeFileName(file.name)}`,
+        file,
+        {
+          access: "public",
+          handleUploadUrl: `/api/plans/${planOfCareId}/attachments`,
+          multipart: file.size > 20 * 1024 * 1024,
+          contentType: file.type,
+          onUploadProgress: ({ percentage }) =>
+            updateFile(key, { progress: Math.round(percentage) }),
+        }
+      );
+      const kind = validateFileForUpload(file);
+      if (!kind.ok) throw new Error(kind.error);
+      updateFile(key, {
+        progress: 100,
+        attachment: {
+          id: blob.url,
+          kind: kind.value,
+          url: blob.url,
+          fileName: file.name,
+          mimeType: file.type,
+          size: file.size,
+        },
+      });
+    } catch {
+      updateFile(key, { error: "Upload failed" });
+    }
+  }
+
+  function addFiles(list: FileList | null) {
+    if (!list) return;
+    setAttachError(null);
+    let room = MAX_ATTACHMENTS_PER_MESSAGE - files.length;
+    const problems: string[] = [];
+
+    for (const file of Array.from(list)) {
+      if (room <= 0) {
+        problems.push(
+          `You can attach up to ${MAX_ATTACHMENTS_PER_MESSAGE} files per message.`
+        );
+        break;
+      }
+      const check = validateFileForUpload(file);
+      if (!check.ok) {
+        problems.push(`${file.name}: ${check.error}`);
+        continue;
+      }
+      room--;
+      const key = `file-${Date.now()}-${tmpCounter.current++}`;
+      setFiles((prev) => [...prev, { key, name: file.name, progress: 0 }]);
+      void uploadFile(key, file);
+    }
+    if (problems.length) setAttachError(problems.join(" "));
+  }
+
   function submit() {
+    if (!canSend) return;
     const text = draft.trim();
-    if (!text) return;
+    const attachments = readyFiles;
     setDraft("");
-    void send(text);
+    setFiles((prev) => prev.filter((f) => f.error)); // keep failed ones visible
+    setAttachError(null);
+    void send(text, attachments);
     inputRef.current?.focus();
   }
 
@@ -318,9 +479,22 @@ export function ChatView({
                   startsGroup ? "mt-2" : "mt-0.5"
                 }`}
               >
+                {m.attachments.length > 0 && (
+                  <div
+                    className={`flex max-w-[75%] flex-col gap-1 ${
+                      mine ? "items-end" : "items-start"
+                    } ${m.status ? "opacity-70" : ""}`}
+                  >
+                    {m.attachments.map((a) => (
+                      <AttachmentView key={a.id} a={a} />
+                    ))}
+                  </div>
+                )}
+                {m.body && (
                 <div
                   className={[
                     "max-w-[75%] whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-[15px] leading-snug",
+                    m.attachments.length > 0 ? "mt-1" : "",
                     mine
                       ? "bg-gray-500 text-white"
                       : "bg-gray-200 text-gray-900",
@@ -331,10 +505,11 @@ export function ChatView({
                 >
                   {m.body}
                 </div>
+                )}
                 {m.status === "failed" && (
                   <button
                     type="button"
-                    onClick={() => void send(m.body, m.id)}
+                    onClick={() => void send(m.body, m.attachments, m.id)}
                     className="mt-1 text-xs text-red-600 hover:underline"
                   >
                     Not delivered. Tap to retry.
@@ -347,39 +522,115 @@ export function ChatView({
       </div>
 
       {/* Composer */}
-      <div className="flex items-end gap-2 border-t border-gray-200 bg-gray-50 p-3">
-        <textarea
-          ref={inputRef}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKeyDown}
-          rows={1}
-          maxLength={MESSAGE_MAX_LENGTH}
-          placeholder="Message"
-          aria-label="Message"
-          className="max-h-36 min-h-[40px] flex-1 resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-[15px] leading-snug outline-none focus:border-gray-500"
-        />
-        <button
-          type="button"
-          onClick={submit}
-          disabled={draft.trim().length === 0}
-          aria-label="Send message"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-500 text-white transition-colors hover:bg-gray-600 disabled:bg-gray-300"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+      <div className="border-t border-gray-200 bg-gray-50 p-3">
+        {(files.length > 0 || attachError) && (
+          <div className="mb-2 space-y-1">
+            {files.map((f) => (
+              <div
+                key={f.key}
+                className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs"
+              >
+                <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                <span className={f.error ? "text-red-600" : "text-gray-500"}>
+                  {f.error ?? (f.attachment ? "Ready" : `${f.progress}%`)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFiles((prev) => prev.filter((x) => x.key !== f.key))
+                  }
+                  aria-label={`Remove ${f.name}`}
+                  className="px-1 text-gray-500 hover:text-gray-900"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+            {attachError && (
+              <p role="alert" className="text-xs text-red-600">
+                {attachError}
+              </p>
+            )}
+          </div>
+        )}
+        <div className="flex items-end gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept={FILE_INPUT_ACCEPT}
+            className="hidden"
+            onChange={(e) => {
+              addFiles(e.target.files);
+              e.target.value = ""; // allow re-picking the same file
+            }}
+          />
+          {/* On phones, `capture` opens the camera to take a photo/video. */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*,video/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              addFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Attach a file"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-100"
           >
-            <path d="M12 19V5M5 12l7-7 7 7" />
-          </svg>
-        </button>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 11.5l-8.6 8.6a5 5 0 01-7.1-7.1l8.6-8.6a3.4 3.4 0 014.8 4.8l-8.6 8.6a1.7 1.7 0 01-2.4-2.4l7.9-7.9" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => cameraInputRef.current?.click()}
+            aria-label="Take a photo or video"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-100"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+          </button>
+          <textarea
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            maxLength={MESSAGE_MAX_LENGTH}
+            placeholder="Message"
+            aria-label="Message"
+            className="max-h-36 min-h-[40px] flex-1 resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-[15px] leading-snug outline-none focus:border-gray-500"
+          />
+          <button
+            type="button"
+            onClick={submit}
+            disabled={!canSend}
+            aria-label="Send message"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-500 text-white transition-colors hover:bg-gray-600 disabled:bg-gray-300"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 19V5M5 12l7-7 7 7" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );

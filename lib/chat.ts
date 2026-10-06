@@ -1,7 +1,7 @@
-import { and, asc, desc, eq, gt, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, or } from "drizzle-orm";
 import { db } from "@/db";
-import { messages, plansOfCare } from "@/db/schema";
-import type { ChatMessage } from "./chat-shared";
+import { attachments, messages, plansOfCare } from "@/db/schema";
+import type { ChatAttachment, ChatMessage } from "./chat-shared";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -39,14 +39,51 @@ export async function getPlanForUser(planId: string, userId: string) {
 }
 
 type MessageRow = typeof messages.$inferSelect;
+type AttachmentRow = typeof attachments.$inferSelect;
 
-export function toChatMessage(row: MessageRow): ChatMessage {
+function toChatAttachment(row: AttachmentRow): ChatAttachment {
+  return {
+    id: row.id,
+    kind: row.kind,
+    url: row.blobUrl,
+    fileName: row.fileName,
+    mimeType: row.mimeType,
+    size: row.fileSizeBytes,
+  };
+}
+
+export function toChatMessage(
+  row: MessageRow,
+  messageAttachments: AttachmentRow[] = []
+): ChatMessage {
   return {
     id: row.id,
     senderUserId: row.senderUserId,
     body: row.body ?? "",
+    attachments: messageAttachments.map(toChatAttachment),
     createdAt: row.createdAt.toISOString(),
   };
+}
+
+// Attaches each message's attachments (one extra query for the batch).
+async function withAttachments(rows: MessageRow[]): Promise<ChatMessage[]> {
+  if (rows.length === 0) return [];
+  const files = await db
+    .select()
+    .from(attachments)
+    .where(
+      inArray(
+        attachments.messageId,
+        rows.map((r) => r.id)
+      )
+    )
+    .orderBy(asc(attachments.createdAt));
+
+  const byMessage = new Map<string, AttachmentRow[]>();
+  for (const f of files) {
+    byMessage.set(f.messageId, [...(byMessage.get(f.messageId) ?? []), f]);
+  }
+  return rows.map((r) => toChatMessage(r, byMessage.get(r.id)));
 }
 
 // Most recent `limit` messages, oldest first.
@@ -61,7 +98,7 @@ export async function getRecentMessages(
     .orderBy(desc(messages.createdAt))
     .limit(limit);
 
-  return rows.reverse().map(toChatMessage);
+  return withAttachments(rows.reverse());
 }
 
 // Messages strictly newer than `after`, oldest first (used for
@@ -77,5 +114,5 @@ export async function getMessagesAfter(
     .orderBy(asc(messages.createdAt))
     .limit(200);
 
-  return rows.map(toChatMessage);
+  return withAttachments(rows);
 }

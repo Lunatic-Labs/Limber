@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { messages } from "@/db/schema";
+import { attachments, messages } from "@/db/schema";
 import {
   getMessagesAfter,
   getPlanForUser,
@@ -12,6 +12,11 @@ import {
   NEW_MESSAGE_EVENT,
   planChannelName,
 } from "@/lib/chat-shared";
+import {
+  MAX_ATTACHMENTS_PER_MESSAGE,
+  validateAttachmentInput,
+  type ValidAttachment,
+} from "@/lib/attachments-shared";
 import { getPusherServer } from "@/lib/pusher";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -42,7 +47,10 @@ export async function GET(req: Request, { params }: Ctx) {
   return NextResponse.json({ messages: newMessages });
 }
 
-// POST /api/plans/:id/messages   { "body": "text" }
+// POST /api/plans/:id/messages
+//   { "body": "text", "attachments": [{ url, fileName, mimeType, size }] }
+// Either a non-empty body or at least one attachment is required.
+// Attachment files are uploaded to Vercel Blob first (see ../attachments).
 export async function POST(req: Request, { params }: Ctx) {
   const session = await auth();
   if (!session?.user) {
@@ -56,21 +64,48 @@ export async function POST(req: Request, { params }: Ctx) {
   }
 
   let text: unknown;
+  let rawAttachments: unknown;
   try {
-    ({ body: text } = await req.json());
+    ({ body: text, attachments: rawAttachments } = await req.json());
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (typeof text !== "string" || text.trim().length === 0) {
-    return NextResponse.json(
-      { error: "Message can't be empty" },
-      { status: 400 }
-    );
+  if (text === undefined || text === null) text = "";
+  if (typeof text !== "string") {
+    return NextResponse.json({ error: "Invalid message" }, { status: 400 });
   }
   if (text.length > MESSAGE_MAX_LENGTH) {
     return NextResponse.json(
       { error: `Message is too long (max ${MESSAGE_MAX_LENGTH} characters)` },
+      { status: 400 }
+    );
+  }
+
+  if (rawAttachments === undefined || rawAttachments === null) {
+    rawAttachments = [];
+  }
+  if (
+    !Array.isArray(rawAttachments) ||
+    rawAttachments.length > MAX_ATTACHMENTS_PER_MESSAGE
+  ) {
+    return NextResponse.json(
+      { error: `At most ${MAX_ATTACHMENTS_PER_MESSAGE} attachments per message` },
+      { status: 400 }
+    );
+  }
+  const files: ValidAttachment[] = [];
+  for (const raw of rawAttachments) {
+    const result = validateAttachmentInput(raw, plan.id);
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+    files.push(result.value);
+  }
+
+  if (text.trim().length === 0 && files.length === 0) {
+    return NextResponse.json(
+      { error: "Message can't be empty" },
       { status: 400 }
     );
   }
@@ -80,11 +115,27 @@ export async function POST(req: Request, { params }: Ctx) {
     .values({
       planOfCareId: plan.id,
       senderUserId: session.user.id,
-      body: text.trim(),
+      body: text.trim() || null,
     })
     .returning();
 
-  const message = toChatMessage(row);
+  const savedFiles = files.length
+    ? await db
+        .insert(attachments)
+        .values(
+          files.map((f) => ({
+            messageId: row.id,
+            kind: f.kind,
+            blobUrl: f.url,
+            fileName: f.fileName,
+            mimeType: f.mimeType,
+            fileSizeBytes: f.size,
+          }))
+        )
+        .returning()
+    : [];
+
+  const message = toChatMessage(row, savedFiles);
 
   // Broadcast to everyone subscribed to this plan's channel. The sender
   // is excluded (via their socket id) because they already have the

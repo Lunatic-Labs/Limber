@@ -111,3 +111,50 @@ test("attachmentPathPrefix is scoped per plan", () => {
   assert.equal(attachmentPathPrefix(PLAN), `plans/${PLAN}/`);
   assert.ok(MAX_ATTACHMENTS_PER_MESSAGE >= 1);
 });
+
+import {
+  attachmentContentHeaders,
+  attachmentDownloadPath,
+} from "../lib/attachments-shared";
+
+const ATT = "33333333-3333-4333-8333-333333333333";
+
+test("attachmentDownloadPath points at the authenticated route", () => {
+  assert.equal(
+    attachmentDownloadPath(PLAN, ATT),
+    `/api/plans/${PLAN}/attachments/${ATT}`
+  );
+});
+
+test("attachmentContentHeaders: photos and videos display inline", () => {
+  const h = attachmentContentHeaders({
+    kind: "photo",
+    mimeType: "image/jpeg",
+    fileName: "knee.jpg",
+  });
+  assert.equal(h["Content-Type"], "image/jpeg");
+  assert.match(h["Content-Disposition"], /^inline;/);
+  assert.equal(h["X-Content-Type-Options"], "nosniff");
+  assert.match(h["Cache-Control"], /^private/);
+});
+
+test("attachmentContentHeaders: documents always download", () => {
+  const h = attachmentContentHeaders({
+    kind: "document",
+    mimeType: "application/pdf",
+    fileName: "plan.pdf",
+  });
+  assert.match(h["Content-Disposition"], /^attachment;/);
+});
+
+test("attachmentContentHeaders: file names can't break the header", () => {
+  const h = attachmentContentHeaders({
+    kind: "document",
+    mimeType: "text/plain",
+    fileName: 'a"b\r\nSet-Cookie: x=1.txt',
+  });
+  assert.ok(!/[\r\n]/.test(h["Content-Disposition"]));
+  // Quotes inside the quoted filename must not terminate it early.
+  assert.equal(h["Content-Disposition"].match(/filename="/g)?.length, 1);
+  assert.ok(!/filename="[^"]*"[^;]*"/.test(h["Content-Disposition"].split("filename*")[0]));
+});

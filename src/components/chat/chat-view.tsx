@@ -26,8 +26,8 @@ import {
 } from "@/lib/chat-shared";
 
 // A message the user just sent that the server hasn't confirmed yet
-// (or that failed to send). Real messages never have `status`.
-type LocalMessage = ChatMessage & { status?: "sending" | "failed" };
+// (or that failed to send). Real messages never have `status`; local
+// ones may carry `blobUrl`s on their attachments for sending/retry.
 
 // A file the user picked that is uploading to Blob (or failed to).
 // Once `attachment` is set it's ready to be sent with the message.
@@ -36,7 +36,21 @@ type PendingFile = {
   name: string;
   progress: number; // 0-100
   error?: string;
-  attachment?: ChatAttachment;
+  attachment?: UploadedAttachment;
+};
+
+// An attachment that's been uploaded but not yet sent. `url` is a local
+// object URL (so it can be previewed immediately); `blobUrl` is what
+// the server needs. The private Blob URL itself can't be opened by a
+// browser, so it is never used for display.
+type UploadedAttachment = ChatAttachment & { blobUrl: string };
+
+// A message the user just sent that the server hasn't confirmed yet
+// (or that failed to send). Real messages never have `status`. Its
+// attachments keep their `blobUrl` so a failed send can be retried.
+type LocalMessage = Omit<ChatMessage, "attachments"> & {
+  attachments: (ChatAttachment & { blobUrl?: string })[];
+  status?: "sending" | "failed";
 };
 
 function formatSize(bytes: number): string {
@@ -274,7 +288,11 @@ export function ChatView({
   }, [draft]);
 
   const send = useCallback(
-    async (text: string, attachments: ChatAttachment[], retryId?: string) => {
+    async (
+      text: string,
+      attachments: (ChatAttachment & { blobUrl?: string })[],
+      retryId?: string
+    ) => {
       const tmpId = retryId ?? `tmp-${Date.now()}-${tmpCounter.current++}`;
       stickToBottom.current = true;
 
@@ -307,7 +325,7 @@ export function ChatView({
           body: JSON.stringify({
             body: text,
             attachments: attachments.map((a) => ({
-              url: a.url,
+              url: a.blobUrl,
               fileName: a.fileName,
               mimeType: a.mimeType,
               size: a.size,
@@ -350,7 +368,7 @@ export function ChatView({
         `${attachmentPathPrefix(planOfCareId)}${safeFileName(file.name)}`,
         file,
         {
-          access: "public",
+          access: "private",
           handleUploadUrl: `/api/plans/${planOfCareId}/attachments`,
           multipart: file.size > 20 * 1024 * 1024,
           contentType: file.type,
@@ -365,7 +383,8 @@ export function ChatView({
         attachment: {
           id: blob.url,
           kind: kind.value,
-          url: blob.url,
+          url: URL.createObjectURL(file),
+          blobUrl: blob.url,
           fileName: file.name,
           mimeType: file.type,
           size: file.size,

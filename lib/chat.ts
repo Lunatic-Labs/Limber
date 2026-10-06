@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, gt, inArray, or } from "drizzle-orm";
 import { db } from "@/db";
 import { attachments, messages, plansOfCare } from "@/db/schema";
+import { attachmentDownloadPath } from "./attachments-shared";
 import type { ChatAttachment, ChatMessage } from "./chat-shared";
 
 const UUID_RE =
@@ -41,11 +42,16 @@ export async function getPlanForUser(planId: string, userId: string) {
 type MessageRow = typeof messages.$inferSelect;
 type AttachmentRow = typeof attachments.$inferSelect;
 
-function toChatAttachment(row: AttachmentRow): ChatAttachment {
+// The Blob URL is never sent to the browser (the store is private);
+// clients load files through the authenticated attachment route.
+function toChatAttachment(
+  row: AttachmentRow,
+  planOfCareId: string
+): ChatAttachment {
   return {
     id: row.id,
     kind: row.kind,
-    url: row.blobUrl,
+    url: attachmentDownloadPath(planOfCareId, row.id),
     fileName: row.fileName,
     mimeType: row.mimeType,
     size: row.fileSizeBytes,
@@ -60,9 +66,25 @@ export function toChatMessage(
     id: row.id,
     senderUserId: row.senderUserId,
     body: row.body ?? "",
-    attachments: messageAttachments.map(toChatAttachment),
+    attachments: messageAttachments.map((a) =>
+      toChatAttachment(a, row.planOfCareId)
+    ),
     createdAt: row.createdAt.toISOString(),
   };
+}
+
+// One attachment, only if it belongs to a message in `planId`.
+export async function getAttachmentInPlan(planId: string, attachmentId: string) {
+  if (!isUuid(attachmentId)) return null;
+  const [row] = await db
+    .select({ attachment: attachments })
+    .from(attachments)
+    .innerJoin(messages, eq(messages.id, attachments.messageId))
+    .where(
+      and(eq(attachments.id, attachmentId), eq(messages.planOfCareId, planId))
+    )
+    .limit(1);
+  return row?.attachment ?? null;
 }
 
 // Attaches each message's attachments (one extra query for the batch).

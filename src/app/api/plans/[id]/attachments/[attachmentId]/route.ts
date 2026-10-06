@@ -21,10 +21,12 @@ export async function GET(req: Request, { params }: Ctx) {
   const { id, attachmentId } = await params;
   const plan = await getPlanForUser(id, session.user.id);
   if (!plan) {
+    console.warn("[attachment 404] plan not found for user", { id, user: session.user.id });
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   const attachment = await getAttachmentInPlan(plan.id, attachmentId);
   if (!attachment) {
+    console.warn("[attachment 404] attachment not in plan", { id, attachmentId });
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -41,6 +43,10 @@ export async function GET(req: Request, { params }: Ctx) {
     return NextResponse.json({ error: "Unavailable" }, { status: 502 });
   }
   if (!result || !result.stream) {
+    console.warn("[attachment 404] blob get() empty", {
+      blobUrl: attachment.blobUrl,
+      status: result?.statusCode ?? null,
+    });
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

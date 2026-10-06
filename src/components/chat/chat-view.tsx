@@ -24,10 +24,7 @@ import {
   type ChatAttachment,
   type ChatMessage,
 } from "@/lib/chat-shared";
-
-// A message the user just sent that the server hasn't confirmed yet
-// (or that failed to send). Real messages never have `status`; local
-// ones may carry `blobUrl`s on their attachments for sending/retry.
+import { ObjectUrlRegistry } from "@/lib/object-urls";
 
 // A file the user picked that is uploading to Blob (or failed to).
 // Once `attachment` is set it's ready to be sent with the message.
@@ -186,6 +183,15 @@ export function ChatView({
 
   useEffect(() => setMounted(true), []);
 
+  // Local preview URLs (object URLs) are revoked when their preview is
+  // no longer needed; whatever is left is released on unmount.
+  const objectUrls = useRef(new ObjectUrlRegistry());
+  useEffect(() => {
+    const registry = objectUrls.current;
+    registry.activate(); // strict mode re-runs effects after cleanup
+    return () => registry.dispose();
+  }, []);
+
   // Real messages in time order, then unsent/failed ones at the end.
   const ordered = useMemo(() => {
     const confirmed = messages
@@ -340,6 +346,9 @@ export function ChatView({
             [data.message]
           )
         );
+        // The server copy is shown via the attachment route, so the
+        // local previews are done. (Failed sends keep theirs for retry.)
+        for (const a of attachments) objectUrls.current.releaseUrl(a.url);
       } catch {
         setMessages((prev) =>
           prev.map((m) =>
@@ -378,12 +387,15 @@ export function ChatView({
       );
       const kind = validateFileForUpload(file);
       if (!kind.ok) throw new Error(kind.error);
+      // Null if the file was removed (or we unmounted) mid-upload.
+      const previewUrl = objectUrls.current.create(key, file);
+      if (!previewUrl) return;
       updateFile(key, {
         progress: 100,
         attachment: {
           id: blob.url,
           kind: kind.value,
-          url: URL.createObjectURL(file),
+          url: previewUrl,
           blobUrl: blob.url,
           fileName: file.name,
           mimeType: file.type,
@@ -415,6 +427,7 @@ export function ChatView({
       }
       room--;
       const key = `file-${Date.now()}-${tmpCounter.current++}`;
+      objectUrls.current.open(key);
       setFiles((prev) => [...prev, { key, name: file.name, progress: 0 }]);
       void uploadFile(key, file);
     }
@@ -555,9 +568,10 @@ export function ChatView({
                 </span>
                 <button
                   type="button"
-                  onClick={() =>
-                    setFiles((prev) => prev.filter((x) => x.key !== f.key))
-                  }
+                  onClick={() => {
+                    objectUrls.current.release(f.key);
+                    setFiles((prev) => prev.filter((x) => x.key !== f.key));
+                  }}
                   aria-label={`Remove ${f.name}`}
                   className="px-1 text-gray-500 hover:text-gray-900"
                 >

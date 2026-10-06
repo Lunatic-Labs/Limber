@@ -168,6 +168,6 @@ export function attachmentContentHeaders(a: {
     "Content-Type": a.mimeType,
     "Content-Disposition": `${disposition}; filename="${ascii}"; filename*=UTF-8''${encoded}`,
     "X-Content-Type-Options": "nosniff",
-    "Cache-Control": "private, max-age=3600",
+    "Cache-Control": "private, no-store",
   };
 }

@@ -138,3 +138,36 @@ export function validateAttachmentInput(
     value: { url, fileName: fileName.trim(), mimeType, size, kind: file.value },
   };
 }
+
+// Where the browser loads an attachment from. Files live in a private
+// Blob store, so every view goes through this authenticated route.
+export function attachmentDownloadPath(
+  planOfCareId: string,
+  attachmentId: string
+): string {
+  return `/api/plans/${planOfCareId}/attachments/${attachmentId}`;
+}
+
+// Response headers for serving an attachment. Photos and videos show
+// inline; documents always download. `nosniff` stops browsers from
+// guessing a more dangerous type than the one we validated.
+export function attachmentContentHeaders(a: {
+  kind: AttachmentKind;
+  mimeType: string;
+  fileName: string;
+}): Record<string, string> {
+  const disposition = a.kind === "document" ? "attachment" : "inline";
+  // Plain-ASCII fallback with no quotes/control chars, plus the real
+  // name percent-encoded (RFC 5987).
+  const ascii = a.fileName.replace(/[^\x20-\x7e]|["\\;]/g, "_");
+  const encoded = encodeURIComponent(a.fileName).replace(
+    /['()*]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
+  );
+  return {
+    "Content-Type": a.mimeType.split(";")[0].trim().toLowerCase(),
+    "Content-Disposition": `${disposition}; filename="${ascii}"; filename*=UTF-8''${encoded}`,
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "private, no-store",
+  };
+}

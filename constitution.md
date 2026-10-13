@@ -88,3 +88,7 @@ Implemented in `db/schema.ts` (Drizzle). Core entities:
 
 ---
 *Version 11 — role-gated Physician/Patient UI added (middleware + dashboards). See claude.md for scaffold details, test accounts, and known gaps.*
+
+## V2 ADDITIONS:
+- **Add admin role** whose function is to invite users (physicians, patients, and other admin) by email. They do not need to have messaging capabilities, but should be able to see a list of users (name, email, type)
+- **Develop an on-boarding process.** Once a user gets a "special link" via email from admin, they are sent to a page where they can create an account (of the type specified by the admin). Here, they tie the email admin sent to them to their name, a password, and can select or not accessible mode. 

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppShell } from "@/components/app-shell";
+import { navForRole } from "@/components/nav";
 
 export default async function PatientLayout({
   children,
@@ -18,7 +19,7 @@ export default async function PatientLayout({
 
   return (
     <AppShell
-      nav={[{ label: "My Plans of Care", href: "/patient" }]}
+      nav={navForRole("patient")}
       userName={session.user.name ?? "Patient"}
       roleLabel="Patient"
       homeHref="/patient"

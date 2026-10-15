@@ -52,7 +52,7 @@ export default async function PhysicianDashboard() {
             return (
               <li
                 key={patient.id}
-                className="rounded-xl border border-brand-100 bg-white p-5 shadow-sm"
+                className="rounded-xl border border-brand-100 bg-card p-5 shadow-sm"
               >
                 <div className="flex items-center gap-3">
                   <Avatar name={displayName} />

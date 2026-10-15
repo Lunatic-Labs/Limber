@@ -36,7 +36,7 @@ export default async function PatientDashboard() {
           Your physician
         </h2>
         {profile && physicianName ? (
-          <div className="flex items-center gap-3 rounded-xl border border-brand-100 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-3 rounded-xl border border-brand-100 bg-card p-5 shadow-sm">
             <Avatar name={physicianName} />
             <div>
               <p className="text-lg font-semibold">{physicianName}</p>
@@ -60,7 +60,7 @@ export default async function PatientDashboard() {
               <li key={poc.id}>
                 <Link
                   href={`/patient/plans/${poc.id}`}
-                  className="flex min-h-[44px] items-center justify-between gap-3 rounded-xl border border-brand-100 bg-white p-5 shadow-sm hover:bg-brand-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="flex min-h-[44px] items-center justify-between gap-3 rounded-xl border border-brand-100 bg-card p-5 shadow-sm hover:bg-brand-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 >
                   <div className="space-y-1">
                     <p className="text-lg font-semibold">{poc.title}</p>

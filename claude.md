@@ -136,3 +136,12 @@ Hand-authored (this session's npm registry access is blocked by org egress polic
 - Tests: `npm test` runs `node:test` via tsx (`tests/*.test.ts`); currently covers attachment validation only. No route/UI tests yet.
 - Not built yet: older-history paging (latest 200 load), plan-of-care creation UI, orphaned-blob cleanup (a file uploaded but never sent stays in Blob).
 - `db/seed.ts` is now re-runnable and also creates a sample plan of care with 3 messages.
+
+
+## Accessibility preferences (LIM-15)
+- `user_preferences` table (1 row/user, missing row = defaults) — **run `npm run db:push`** to create it. Pure logic/validation/defaults/cookie in `lib/preferences-shared.ts` (tested in `tests/preferences-shared.test.ts`); DB get/save in `lib/preferences.ts`; `GET/PUT /api/preferences` (always the session user's own row).
+- Applied as `data-*` attributes on `<html>` from the root layout (DB when signed in, `limber-prefs` cookie when signed out); `globals.css` keys everything off them. Tailwind colors (`brand`, `ink`, `surface`, new `card`) are CSS variables, so dark/high-contrast just swap variables. Use `bg-card` (not `bg-white`) for panels.
+- `/settings` (all roles; `src/app/settings`) renders `<AccessibilitySettings>` (save-on-change, live preview, rollback on failure) around the reusable controlled `<AccessibilityForm>`. `navForRole()` in `src/components/nav.ts` adds the Settings link.
+- Chat honors `announceNewMessages` (aria-live), `confirmBeforeSend`, and `messageDensity`.
+- Not built: photo alt-text prompt (needs an alt field on `attachment`); admin-preset preferences during onboarding (admin dashboard doesn't exist — hook documented in constitution.md).
+- No tests for the API route / UI yet (repo has no route-test harness); `npm run lint` has no ESLint config (pre-existing).

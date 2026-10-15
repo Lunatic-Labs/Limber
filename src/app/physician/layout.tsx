@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppShell } from "@/components/app-shell";
+import { navForRole } from "@/components/nav";
 
 // Defense in depth: middleware already blocks non-physicians from
 // reaching anything under /physician, but each layout re-checks so
@@ -22,7 +23,7 @@ export default async function PhysicianLayout({
 
   return (
     <AppShell
-      nav={[{ label: "Patients", href: "/physician" }]}
+      nav={navForRole("physician")}
       userName={session.user.name ?? "Physician"}
       roleLabel="Physician"
       homeHref="/physician"

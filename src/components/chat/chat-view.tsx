@@ -97,7 +97,7 @@ function AttachmentView({ a }: { a: ChatAttachment }) {
       target="_blank"
       rel="noopener noreferrer"
       download={a.fileName}
-      className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 hover:bg-gray-50"
+      className="flex items-center gap-2 rounded-lg border border-gray-300 bg-card px-3 py-2 text-sm text-gray-900 hover:bg-gray-50"
     >
       <span aria-hidden="true">📄</span>
       <span className="min-w-0">
@@ -115,6 +115,9 @@ type Props = {
   otherName: string;
   initialMessages: ChatMessage[];
   backHref: string;
+  announceNewMessages?: boolean;
+  confirmBeforeSend?: boolean;
+  compact?: boolean;
 };
 
 // Show a centered timestamp when there's a gap this long between messages.
@@ -161,6 +164,9 @@ export function ChatView({
   otherName,
   initialMessages,
   backHref,
+  announceNewMessages = true,
+  confirmBeforeSend = false,
+  compact = false,
 }: Props) {
   const [messages, setMessages] = useState<LocalMessage[]>(initialMessages);
   const [draft, setDraft] = useState("");
@@ -436,6 +442,7 @@ export function ChatView({
 
   function submit() {
     if (!canSend) return;
+    if (confirmBeforeSend && !window.confirm("Send this message?")) return;
     const text = draft.trim();
     const attachments = readyFiles;
     setDraft("");
@@ -453,7 +460,7 @@ export function ChatView({
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-7rem)] min-h-[420px] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm lg:h-[calc(100dvh-6rem)]">
+    <div className="mx-auto flex h-[calc(100dvh-7rem)] min-h-[420px] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-brand-100 bg-card shadow-sm lg:h-[calc(100dvh-6rem)]">
       {/* Header */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-brand-100 bg-brand-50 px-3 py-2">
         <Link
@@ -474,7 +481,7 @@ export function ChatView({
         ref={listRef}
         onScroll={handleScroll}
         role="log"
-        aria-live="polite"
+        aria-live={announceNewMessages ? "polite" : "off"}
         aria-label={`Conversation with ${otherName}`}
         className="flex-1 overflow-y-auto px-3 py-4"
       >
@@ -508,7 +515,7 @@ export function ChatView({
               )}
               <div
                 className={`flex flex-col ${mine ? "items-end" : "items-start"} ${
-                  startsGroup ? "mt-2" : "mt-0.5"
+                  startsGroup ? (compact ? "mt-1" : "mt-3") : compact ? "mt-0" : "mt-1"
                 }`}
               >
                 {m.attachments.length > 0 && (
@@ -560,7 +567,7 @@ export function ChatView({
             {files.map((f) => (
               <div
                 key={f.key}
-                className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs"
+                className="flex items-center gap-2 rounded-lg border border-gray-200 bg-card px-2 py-1 text-xs"
               >
                 <span className="min-w-0 flex-1 truncate">{f.name}</span>
                 <span className={f.error ? "text-red-600" : "text-gray-500"}>
@@ -614,7 +621,7 @@ export function ChatView({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             aria-label="Attach a file"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-100"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-card text-gray-600 hover:bg-gray-100"
           >
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M21 11.5l-8.6 8.6a5 5 0 01-7.1-7.1l8.6-8.6a3.4 3.4 0 014.8 4.8l-8.6 8.6a1.7 1.7 0 01-2.4-2.4l7.9-7.9" />
@@ -624,7 +631,7 @@ export function ChatView({
             type="button"
             onClick={() => cameraInputRef.current?.click()}
             aria-label="Take a photo or video"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-100"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-card text-gray-600 hover:bg-gray-100"
           >
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
@@ -640,7 +647,7 @@ export function ChatView({
             maxLength={MESSAGE_MAX_LENGTH}
             placeholder="Message"
             aria-label="Message"
-            className="max-h-36 min-h-[40px] flex-1 resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-[15px] leading-snug outline-none focus:border-brand-500"
+            className="max-h-36 min-h-[40px] flex-1 resize-none rounded-lg border border-gray-300 bg-card px-3 py-2 text-[15px] leading-snug outline-none focus:border-brand-500"
           />
           <button
             type="button"

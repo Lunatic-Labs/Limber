@@ -27,7 +27,7 @@ export function AppShell({
   const pathname = usePathname();
 
   const sidebar = (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-card">
       <div className="px-5 py-5">
         <Wordmark href={homeHref} />
       </div>
@@ -72,7 +72,7 @@ export function AppShell({
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-brand-100 bg-white px-4 py-2 lg:hidden">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-brand-100 bg-card px-4 py-2 lg:hidden">
         <Wordmark href={homeHref} />
         <button
           type="button"

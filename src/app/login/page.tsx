@@ -36,7 +36,7 @@ export default function LoginPage() {
   }
 
   const input =
-    "min-h-[44px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200";
+    "min-h-[44px] w-full rounded-lg border border-slate-300 bg-card px-3 py-2 text-base focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200";
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-surface p-4">
@@ -45,7 +45,7 @@ export default function LoginPage() {
       </div>
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-5 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm sm:p-8"
+        className="w-full max-w-sm space-y-5 rounded-2xl border border-brand-100 bg-card p-6 shadow-sm sm:p-8"
       >
         <div>
           <h1 className="text-2xl font-bold">Welcome back</h1>

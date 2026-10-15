@@ -44,7 +44,7 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-8">
         <Wordmark />
         <ButtonLink href="/login" variant="secondary">
@@ -53,7 +53,7 @@ export default async function Home() {
       </header>
 
       <main>
-        <section className="bg-gradient-to-b from-brand-50 to-white">
+        <section className="bg-gradient-to-b from-brand-50 to-card">
           <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-8 sm:py-24">
             <h1 className="text-4xl font-bold tracking-tight text-brand-900 sm:text-5xl">
               Physical therapy care, connected between sessions
@@ -78,7 +78,7 @@ export default async function Home() {
             {features.map((f) => (
               <li
                 key={f.title}
-                className="rounded-xl border border-brand-100 bg-white p-6 shadow-sm"
+                className="rounded-xl border border-brand-100 bg-card p-6 shadow-sm"
               >
                 <h3 className="text-lg font-semibold text-brand-800">{f.title}</h3>
                 <p className="mt-2 text-ink-muted">{f.body}</p>

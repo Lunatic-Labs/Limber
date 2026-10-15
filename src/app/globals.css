@@ -1,3 +1,155 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ------------------------------------------------------------------
+   Theme tokens (space-separated RGB channels, consumed by tailwind.config).
+   Accessibility preferences are applied as data-* attributes on <html>
+   (see lib/preferences-shared.ts#preferencesToDataAttributes).
+   ------------------------------------------------------------------ */
+:root {
+  --c-brand-50: 239 246 255;
+  --c-brand-100: 219 234 254;
+  --c-brand-200: 191 219 254;
+  --c-brand-300: 147 197 253;
+  --c-brand-400: 96 165 250;
+  --c-brand-500: 47 127 214;
+  --c-brand-600: 29 107 191;
+  --c-brand-700: 23 90 159;
+  --c-brand-800: 21 74 130;
+  --c-brand-900: 18 57 95;
+  --c-card: 255 255 255;
+  --c-surface: 244 247 251;
+  --c-ink: 30 41 59;
+  --c-ink-muted: 82 96 114;
+}
+
+/* High contrast (light): near-black text, stronger borders and brand. */
+html[data-contrast="high"] {
+  --c-ink: 0 0 0;
+  --c-ink-muted: 30 41 59;
+  --c-brand-100: 148 170 200;
+  --c-brand-200: 100 128 165;
+  --c-brand-600: 14 62 125;
+  --c-brand-700: 10 50 105;
+  --c-brand-800: 8 40 90;
+}
+
+/* Dark theme: chosen explicitly, or "system" + OS dark. */
+html[data-theme="dark"] {
+  --c-brand-50: 23 37 56;
+  --c-brand-100: 36 58 88;
+  --c-brand-200: 52 82 120;
+  --c-brand-300: 80 120 170;
+  --c-brand-400: 100 150 215;
+  --c-brand-500: 96 165 250;
+  --c-brand-600: 37 99 190;
+  --c-brand-700: 29 78 160;
+  --c-brand-800: 147 197 253;
+  --c-brand-900: 191 219 254;
+  --c-card: 22 28 38;
+  --c-surface: 13 17 23;
+  --c-ink: 230 237 245;
+  --c-ink-muted: 164 177 194;
+  color-scheme: dark;
+}
+html[data-theme="dark"][data-contrast="high"] {
+  --c-ink: 255 255 255;
+  --c-ink-muted: 226 232 240;
+  --c-brand-100: 120 150 195;
+  --c-brand-200: 150 180 225;
+  --c-brand-600: 30 90 190;
+  --c-brand-800: 191 219 254;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"] {
+    --c-brand-50: 23 37 56;
+    --c-brand-100: 36 58 88;
+    --c-brand-200: 52 82 120;
+    --c-brand-300: 80 120 170;
+    --c-brand-400: 100 150 215;
+    --c-brand-500: 96 165 250;
+    --c-brand-600: 37 99 190;
+    --c-brand-700: 29 78 160;
+    --c-brand-800: 147 197 253;
+    --c-brand-900: 191 219 254;
+    --c-card: 22 28 38;
+    --c-surface: 13 17 23;
+    --c-ink: 230 237 245;
+    --c-ink-muted: 164 177 194;
+    color-scheme: dark;
+  }
+  html[data-theme="system"][data-contrast="high"] {
+    --c-ink: 255 255 255;
+    --c-ink-muted: 226 232 240;
+    --c-brand-100: 120 150 195;
+    --c-brand-200: 150 180 225;
+    --c-brand-600: 30 90 190;
+    --c-brand-800: 191 219 254;
+  }
+}
+
+/* The few non-token gray/status utilities, re-mapped for dark mode. */
+html[data-theme="dark"] .bg-gray-100,
+html[data-theme="dark"] .bg-slate-100,
+html[data-theme="dark"] .bg-gray-50 { background-color: rgb(var(--c-brand-100)); }
+html[data-theme="dark"] .text-gray-900,
+html[data-theme="dark"] .text-slate-700 { color: rgb(var(--c-ink)); }
+html[data-theme="dark"] .text-gray-500,
+html[data-theme="dark"] .text-gray-600 { color: rgb(var(--c-ink-muted)); }
+html[data-theme="dark"] .border-gray-300,
+html[data-theme="dark"] .border-gray-200,
+html[data-theme="dark"] .border-slate-300 { border-color: rgb(var(--c-brand-200)); }
+@media (prefers-color-scheme: dark) {
+  html[data-theme="system"] .bg-gray-100,
+  html[data-theme="system"] .bg-slate-100,
+  html[data-theme="system"] .bg-gray-50 { background-color: rgb(var(--c-brand-100)); }
+  html[data-theme="system"] .text-gray-900,
+  html[data-theme="system"] .text-slate-700 { color: rgb(var(--c-ink)); }
+  html[data-theme="system"] .text-gray-500,
+  html[data-theme="system"] .text-gray-600 { color: rgb(var(--c-ink-muted)); }
+  html[data-theme="system"] .border-gray-300,
+  html[data-theme="system"] .border-gray-200,
+  html[data-theme="system"] .border-slate-300 { border-color: rgb(var(--c-brand-200)); }
+}
+
+/* Text size: Tailwind is rem-based, so scaling the root scales the app. */
+html[data-text-size="large"] { font-size: 118.75%; }
+html[data-text-size="xlarge"] { font-size: 137.5%; }
+
+/* Bold text and dyslexia-friendly font. */
+html[data-bold-text="true"] body { font-weight: 600; }
+html[data-dyslexia-font="true"] body {
+  font-family: var(--font-legible), system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  line-height: 1.7;
+}
+
+/* Larger touch targets (the app's 44px minimum becomes 56px). */
+html[data-large-targets="true"] .min-h-\[44px\] { min-height: 56px; }
+html[data-large-targets="true"] button.w-11 { width: 3.5rem; }
+html[data-large-targets="true"] button,
+html[data-large-targets="true"] [role="button"],
+html[data-large-targets="true"] select { min-height: 3.5rem; }
+
+/* Simplified layout: hide decorative extras, add breathing room. */
+html[data-simplified="true"] [data-decorative] { display: none !important; }
+html[data-simplified="true"] main { line-height: 1.75; }
+html[data-simplified="true"] nav a { margin-block: 0.25rem; }
+
+/* Reduced motion: explicit choice (OS preference is always honored too). */
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

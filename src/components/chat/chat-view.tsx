@@ -453,17 +453,17 @@ export function ChatView({
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-9rem)] min-h-[420px] w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
+    <div className="mx-auto flex h-[calc(100dvh-7rem)] min-h-[420px] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm lg:h-[calc(100dvh-6rem)]">
       {/* Header */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-gray-200 bg-gray-50 px-3 py-2">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-brand-100 bg-brand-50 px-3 py-2">
         <Link
           href={backHref}
-          className="justify-self-start rounded px-1 text-sm text-gray-600 hover:text-gray-900"
+          className="justify-self-start rounded px-1 py-2 text-sm font-medium text-brand-700 hover:text-brand-900"
         >
           &lsaquo; Back
         </Link>
         <div className="text-center">
-          <p className="text-sm font-semibold leading-tight">{otherName}</p>
+          <p className="text-base font-semibold leading-tight">{otherName}</p>
           <p className="text-xs leading-tight text-gray-500">{planTitle}</p>
         </div>
         <span />
@@ -528,8 +528,8 @@ export function ChatView({
                     "max-w-[75%] whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-[15px] leading-snug",
                     m.attachments.length > 0 ? "mt-1" : "",
                     mine
-                      ? "bg-gray-500 text-white"
-                      : "bg-gray-200 text-gray-900",
+                      ? "bg-brand-600 text-white"
+                      : "bg-slate-100 text-ink",
                     endsGroup ? (mine ? "rounded-br-sm" : "rounded-bl-sm") : "",
                     m.status === "sending" ? "opacity-70" : "",
                     m.status === "failed" ? "opacity-60" : "",
@@ -554,7 +554,7 @@ export function ChatView({
       </div>
 
       {/* Composer */}
-      <div className="border-t border-gray-200 bg-gray-50 p-3">
+      <div className="border-t border-brand-100 bg-brand-50 p-3">
         {(files.length > 0 || attachError) && (
           <div className="mb-2 space-y-1">
             {files.map((f) => (
@@ -640,14 +640,14 @@ export function ChatView({
             maxLength={MESSAGE_MAX_LENGTH}
             placeholder="Message"
             aria-label="Message"
-            className="max-h-36 min-h-[40px] flex-1 resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-[15px] leading-snug outline-none focus:border-gray-500"
+            className="max-h-36 min-h-[40px] flex-1 resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-[15px] leading-snug outline-none focus:border-brand-500"
           />
           <button
             type="button"
             onClick={submit}
             disabled={!canSend}
             aria-label="Send message"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-500 text-white transition-colors hover:bg-gray-600 disabled:bg-gray-300"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white transition-colors hover:bg-brand-700 disabled:bg-slate-300"
           >
             <svg
               viewBox="0 0 24 24"

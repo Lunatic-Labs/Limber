@@ -1,14 +1,6 @@
 # Limber — Project Constitution
 
-## Vision
-Limber is a physical therapy platform that closes the gap between patients and physical therapists between in-person sessions, through direct communication and objective movement tracking — so recovery stays consistent and physicians can adjust care based on real data, not just patient self-report.
 
-## Core Principles
-1. **Patient-Physician Connection First** — the primary value is uninterrupted communication tied to a specific Plan of Care (POC).
-2. **Objective Progress Over Self-Report** — motion capture (once built) exists to give physicians verifiable movement data, not to replace clinical judgment.
-3. **Adaptable by Design** — architecture should not assume a single PT practice model; it should be extensible to different clinical contexts within physical therapy.
-4. **Simplicity for the End User** — patients and physicians should not need training to use core features.
-5. **Privacy-Minded from Day One** — even though v1 uses sample data and is not HIPAA-compliant, decisions should not paint us into a corner that makes future compliance hard.
 
 ## Users & Access Model
 - Two roles for v1: **Patient** and **Physician**.
@@ -32,6 +24,14 @@ Limber is a physical therapy platform that closes the gap between patients and p
 
 ### Quality Bar
 Test cases and edge-case coverage are written **before** a feature is implemented, and the full test suite is run against every new feature added (not just the feature under development). This applies to every core feature above.
+
+### UI & Design Direction
+- **Look and feel**: clean, calm, easy to read and navigate — modeled on hospital websites. Calm medical blue primary on white / light gray-blue surfaces, dark slate text, large readable type (Inter), generous spacing, 44px+ tap targets, WCAG AA contrast.
+- **Mobile-first, light theme only** (no dark mode in v1).
+- **Navigation**: left sidebar when signed in (collapses to a drawer on phones). Lists only sections that exist; new items are added as features ship.
+- **Pages covered**: public landing page (hero + sign-in, feature cards), login, physician/patient dashboards, and the chat screen.
+- **Branding**: simple text wordmark "Limber" for now; a real logo can replace it later.
+- Visual restyle only — no change to API, auth, or data behavior.
 
 ## Non-Functional Requirements (v1)
 - **Scale**: v1 launches at low data volume/user count (test data, small user base). No hard numbers set for 1–3 year growth yet, but the explicit long-term goal is to be able to scale to **thousands of users** without a rearchitecture — v1 architecture choices should not foreclose that, even though v1 itself will not be built or tuned for that scale.

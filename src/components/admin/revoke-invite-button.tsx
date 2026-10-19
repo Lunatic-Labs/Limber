@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { buttonClass } from "@/components/ui/button";
 
 export function RevokeInviteButton({ id }: { id: string }) {
   const router = useRouter();
@@ -21,7 +22,7 @@ export function RevokeInviteButton({ id }: { id: string }) {
     <button
       onClick={revoke}
       disabled={busy}
-      className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 disabled:opacity-50"
+      className={buttonClass("secondary", "px-4")}
     >
       {busy ? "Revoking..." : "Revoke"}
     </button>

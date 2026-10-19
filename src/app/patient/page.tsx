@@ -2,6 +2,9 @@ import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
+import { Avatar } from "@/components/ui/avatar";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { PageHeader, EmptyState } from "@/components/ui/page-header";
 import { patientProfiles, plansOfCare, users } from "@/db/schema";
 
 export default async function PatientDashboard() {
@@ -22,39 +25,50 @@ export default async function PatientDashboard() {
     .from(plansOfCare)
     .where(eq(plansOfCare.patientUserId, patientId));
 
+  const physicianName = profile?.physicianName ?? profile?.physicianUsername;
+
   return (
-    <main className="space-y-6">
-      <section>
-        <h1 className="text-xl font-semibold">Your physician</h1>
-        {profile ? (
-          <p className="text-gray-700">
-            {profile.physicianName ?? profile.physicianUsername} (@
-            {profile.physicianUsername})
-          </p>
+    <main className="space-y-8">
+      <PageHeader title="My plans of care" />
+
+      <section aria-label="Your physician">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">
+          Your physician
+        </h2>
+        {profile && physicianName ? (
+          <div className="flex items-center gap-3 rounded-xl border border-brand-100 bg-white p-5 shadow-sm">
+            <Avatar name={physicianName} />
+            <div>
+              <p className="text-lg font-semibold">{physicianName}</p>
+              <p className="text-sm text-ink-muted">@{profile.physicianUsername}</p>
+            </div>
+          </div>
         ) : (
-          <p className="text-gray-600">No physician is assigned yet.</p>
+          <EmptyState>No physician is assigned yet.</EmptyState>
         )}
       </section>
 
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Your plans of care</h2>
+      <section aria-label="Plans of care">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">
+          Plans of care
+        </h2>
         {pocs.length === 0 ? (
-          <p className="text-gray-600">No plans of care yet.</p>
+          <EmptyState>No plans of care yet.</EmptyState>
         ) : (
-          <ul className="divide-y divide-gray-200 rounded border border-gray-200">
+          <ul className="space-y-3">
             {pocs.map((poc) => (
               <li key={poc.id}>
                 <Link
                   href={`/patient/plans/${poc.id}`}
-                  className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
+                  className="flex min-h-[44px] items-center justify-between gap-3 rounded-xl border border-brand-100 bg-white p-5 shadow-sm hover:bg-brand-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 >
-                  <div>
-                    <p className="font-medium">{poc.title}</p>
-                    <p className="text-sm text-gray-500 capitalize">
-                      {poc.status}
-                    </p>
+                  <div className="space-y-1">
+                    <p className="text-lg font-semibold">{poc.title}</p>
+                    <StatusBadge status={poc.status} />
                   </div>
-                  <span className="text-sm text-gray-500">Messages &rsaquo;</span>
+                  <span className="shrink-0 text-sm font-medium text-brand-700">
+                    Messages &rsaquo;
+                  </span>
                 </Link>
               </li>
             ))}

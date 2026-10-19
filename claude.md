@@ -136,6 +136,10 @@ Hand-authored (this session's npm registry access is blocked by org egress polic
 - New users get `username = email` (lowercased), `email_verified = now`. `auth.ts` lowercases usernames containing `@` so email sign-in is case-insensitive.
 - Accessible mode (listed in the V2 spec) is intentionally **not built yet** — no column, no form field; to be added later.
 
+## UI Redesign (in progress)
+- Direction is in constitution.md ("UI & Design Direction"): calm blue, Inter, mobile-first, light only, left sidebar nav, text wordmark.
+- Brand colors are Tailwind tokens in `tailwind.config.ts` (`brand-*`); shared primitives live in `src/components/ui/`; the signed-in shell is `src/components/app-shell.tsx`, used by the physician and patient layouts.
+
 ## Chat (text messaging) — initial version
 - One conversation per Plan of Care. Same UI for both roles: `src/components/chat/chat-view.tsx` (client) + `chat-screen.tsx` (server wrapper that checks access and loads history). Routes: `/patient/plans/[id]` and `/physician/plans/[id]`; both dashboards link to them.
 - Style: iMessage-like, but gray (own messages mid-gray, other party light gray) and less rounded (`rounded-lg`, small-radius "tail" on the last bubble in a group).

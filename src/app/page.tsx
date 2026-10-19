@@ -23,14 +23,14 @@ const features = [
 ];
 
 // Signed-in users go straight to their role's dashboard. Signed-out
-// visitors see the public landing page. Administrator has no UI in v1
-// (see constitution.md), so it falls through to a placeholder.
+// visitors see the public landing page.
 export default async function Home() {
   const session = await auth();
 
   if (session?.user) {
     if (session.user.role === "physician") redirect("/physician");
     if (session.user.role === "patient") redirect("/patient");
+    if (session.user.role === "administrator") redirect("/admin");
 
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-surface p-6 text-center">

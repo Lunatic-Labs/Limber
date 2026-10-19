@@ -9,6 +9,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "./index";
 import {
+  administratorProfiles,
   messages,
   patientProfiles,
   physicianProfiles,
@@ -27,6 +28,12 @@ const TEST_PATIENT = {
   username: "patient1",
   password: "changeme123",
   name: "Test Patient",
+};
+
+const TEST_ADMIN = {
+  username: "admin1",
+  password: "changeme123",
+  name: "Test Administrator",
 };
 
 async function findUser(username: string) {
@@ -73,6 +80,23 @@ async function seed() {
   await db
     .insert(patientProfiles)
     .values({ userId: patientUser.id, physicianUserId: physicianUser.id })
+    .onConflictDoNothing();
+
+  let adminUser = await findUser(TEST_ADMIN.username);
+  if (!adminUser) {
+    [adminUser] = await db
+      .insert(users)
+      .values({
+        username: TEST_ADMIN.username,
+        passwordHash: await hashPassword(TEST_ADMIN.password),
+        name: TEST_ADMIN.name,
+        role: "administrator",
+      })
+      .returning();
+  }
+  await db
+    .insert(administratorProfiles)
+    .values({ userId: adminUser.id })
     .onConflictDoNothing();
 
   // Sample Plan of Care (+ a few messages) for the chat UI.
@@ -126,6 +150,7 @@ async function seed() {
   console.log("Done. Test accounts:");
   console.log(`  Physician -> username: ${TEST_PHYSICIAN.username}  password: ${TEST_PHYSICIAN.password}`);
   console.log(`  Patient   -> username: ${TEST_PATIENT.username}  password: ${TEST_PATIENT.password}`);
+  console.log(`  Admin     -> username: ${TEST_ADMIN.username}  password: ${TEST_ADMIN.password}`);
 }
 
 // Set exitCode instead of calling process.exit(): exiting while the

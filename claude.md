@@ -123,6 +123,19 @@ Hand-authored (this session's npm registry access is blocked by org egress polic
 - Not built yet: any per-patient detail view for the physician (messages, plan-of-care detail), and no messaging/calendar UI at all — both dashboards are just the "you're logged in as the right role and here's your list" shell to build on top of.
 
 
+## Admin role (V2) — invite + user list
+- Admins are routed to `/admin` (middleware + layout gate, `src/app/page.tsx` redirect). The page has an invite form (email + type), outstanding invitations (with revoke), and a user list (name, email, type). No messaging for admins.
+- New `invitation` table (`db/schema.ts`): email, role, `physician_user_id` (required for patient invites — a patient always has one physician), SHA-256 `token_hash` (raw token never stored), expiry (7 days), accepted/revoked timestamps. **Run `npm run db:push`** to create it.
+- API: `POST /api/admin/invitations`, `DELETE /api/admin/invitations/[id]` (admin-only, re-checked server-side via `lib/admin.ts`). Re-inviting an email revokes its earlier outstanding invite; emails already belonging to a user are rejected (409).
+- Email: `lib/email.ts` sends via Resend if `RESEND_API_KEY` + `EMAIL_FROM` are set; otherwise the admin UI shows the invite link to copy. Link format: `/onboarding/<token>`.
+- Pure logic + tests: `lib/invitations.ts`, `tests/invitations.test.ts`. Seed now also creates `admin1`/`changeme123`.
+
+## Onboarding (V2)
+- `/onboarding/[token]` (public; not in the middleware matcher) looks up the invite by token hash and shows the account form (email read-only, full name, password + confirm), or a message for invalid/revoked, used, or expired links. On success it signs the user in and sends them to `/`.
+- `POST /api/onboarding/[token]` validates (`lib/onboarding.ts`, tested), atomically claims the invite (single UPDATE on `accepted_at IS NULL`, so replays/double-submits can't create two accounts), then creates the user + role profile in one `db.batch` (neon-http has no interactive transactions). If creation fails the invite is released. Patient invites create `patient_profile` with the invite's physician.
+- New users get `username = email` (lowercased), `email_verified = now`. `auth.ts` lowercases usernames containing `@` so email sign-in is case-insensitive.
+- Accessible mode (listed in the V2 spec) is intentionally **not built yet** — no column, no form field; to be added later.
+
 ## Chat (text messaging) — initial version
 - One conversation per Plan of Care. Same UI for both roles: `src/components/chat/chat-view.tsx` (client) + `chat-screen.tsx` (server wrapper that checks access and loads history). Routes: `/patient/plans/[id]` and `/physician/plans/[id]`; both dashboards link to them.
 - Style: iMessage-like, but gray (own messages mid-gray, other party light gray) and less rounded (`rounded-lg`, small-radius "tail" on the last bubble in a group).

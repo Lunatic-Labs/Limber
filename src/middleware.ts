@@ -6,7 +6,7 @@ import { authConfig } from "../auth.config";
 const { auth } = NextAuth(authConfig);
 
 // Route-level gate: anything under /physician requires role
-// "physician", anything under /patient requires role "patient".
+// "physician", /patient requires "patient", /admin requires "administrator".
 // Signed-out users are bounced to /login; signed-in users with the
 // wrong role are bounced home (which itself redirects them to
 // their own dashboard — see src/app/page.tsx).
@@ -17,8 +17,9 @@ export default auth((req) => {
 
   const isPhysicianRoute = nextUrl.pathname.startsWith("/physician");
   const isPatientRoute = nextUrl.pathname.startsWith("/patient");
+  const isAdminRoute = nextUrl.pathname.startsWith("/admin");
 
-  if (!isPhysicianRoute && !isPatientRoute) {
+  if (!isPhysicianRoute && !isPatientRoute && !isAdminRoute) {
     return NextResponse.next();
   }
 
@@ -36,9 +37,13 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/", nextUrl));
   }
 
+  if (isAdminRoute && role !== "administrator") {
+    return NextResponse.redirect(new URL("/", nextUrl));
+  }
+
   return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/physician/:path*", "/patient/:path*"],
+  matcher: ["/physician/:path*", "/patient/:path*", "/admin/:path*"],
 };

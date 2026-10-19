@@ -2,8 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 
 // Sends a signed-in user straight to their role's dashboard.
-// Administrator has no UI in v1 (see constitution.md), so it falls
-// through to a placeholder rather than a redirect loop.
+// Administrators land on the invite/user-list view (V2).
 export default async function Home() {
   const session = await auth();
 
@@ -17,6 +16,10 @@ export default async function Home() {
 
   if (session.user.role === "patient") {
     redirect("/patient");
+  }
+
+  if (session.user.role === "administrator") {
+    redirect("/admin");
   }
 
   return (

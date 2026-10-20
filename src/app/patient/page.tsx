@@ -29,7 +29,7 @@ export default async function PatientDashboard() {
 
   return (
     <main className="space-y-8">
-      <PageHeader title="My plans of care" />
+      <PageHeader title="My Dashboard" />
 
       <section aria-label="Your physician">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">

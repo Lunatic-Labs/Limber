@@ -465,9 +465,12 @@ export function ChatView({
       <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-brand-100 bg-brand-50 px-3 py-2">
         <Link
           href={backHref}
-          className="justify-self-start rounded px-1 py-2 text-sm font-medium text-brand-700 hover:text-brand-900"
+          aria-label="Back to conversations"
+          className="-ml-1 flex h-11 w-11 items-center justify-center justify-self-start rounded-full text-brand-700 transition-colors duration-fast hover:bg-brand-100 hover:text-brand-900 active:bg-brand-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
-          &lsaquo; Back
+          <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
         </Link>
         <div className="text-center">
           <p className="text-base font-semibold leading-tight">{otherName}</p>

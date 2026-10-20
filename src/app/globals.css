@@ -127,7 +127,8 @@ html[data-dyslexia-font="true"] body {
 
 /* Larger touch targets (the app's 44px minimum becomes 56px). */
 html[data-large-targets="true"] .min-h-\[44px\] { min-height: 56px; }
-html[data-large-targets="true"] button.w-11 { width: 3.5rem; }
+html[data-large-targets="true"] button.w-11,
+html[data-large-targets="true"] a.w-11 { width: 3.5rem; height: 3.5rem; }
 html[data-large-targets="true"] button,
 html[data-large-targets="true"] [role="button"],
 html[data-large-targets="true"] select { min-height: 3.5rem; }

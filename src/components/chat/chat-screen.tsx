@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getPlanForUser, getRecentMessages } from "@/lib/chat";
+import { getPreferences } from "@/lib/preferences";
 import { ChatView } from "./chat-view";
 
 // Server-side wrapper shared by the patient and physician chat pages.
@@ -34,6 +35,7 @@ export async function ChatScreen({
     .limit(1);
 
   const initialMessages = await getRecentMessages(plan.id);
+  const prefs = await getPreferences(session.user.id);
 
   return (
     <ChatView
@@ -43,6 +45,9 @@ export async function ChatScreen({
       otherName={other?.name ?? other?.username ?? "Unknown"}
       initialMessages={initialMessages}
       backHref={backHref}
+      announceNewMessages={prefs.announceNewMessages}
+      confirmBeforeSend={prefs.confirmBeforeSend}
+      compact={prefs.messageDensity === "compact"}
     />
   );
 }

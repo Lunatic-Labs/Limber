@@ -11,7 +11,7 @@ export function Wordmark({ href = "/", light = false }: { href?: string; light?:
       <span
         aria-hidden
         className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-          light ? "bg-white text-brand-700" : "bg-brand-600 text-white"
+          light ? "bg-card text-brand-700" : "bg-brand-600 text-white"
         }`}
       >
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">

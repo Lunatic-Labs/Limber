@@ -77,6 +77,7 @@ Implemented in `db/schema.ts` (Drizzle). Core entities:
 - Performance tuning, load testing, and infrastructure scaling work aimed at the thousands-of-users target (tracked as a future milestone, not a v1 deliverable)
 
 ## Open Considerations for the Future
+- **Admin navigation**: administrators currently see only "Users" in the nav and cannot discover Settings (and `/settings` shows no Users link). Add an administrator branch to `navForRole()` (`src/components/nav.ts`) returning both Users and Settings, and use that helper in `src/app/admin/layout.tsx`.
 - **Motion-capture movement assessment**: camera-based capture of the patient performing POC exercises, analyzed for correctness, results shared with the physician for progress assessment. Core to the long-term vision, deferred out of v1. When picked back up, revisit CV/pose-estimation tooling choice (e.g., MediaPipe vs. a cloud ML API) and whether processing happens client-side or server-side.
 - **HIPAA readiness**: note architectural decisions now that would ease a future compliance pass (encryption at rest/in transit, audit logging, granular access controls, BAA-ready infrastructure) — to be expanded once we reach a security/compliance stage.
 - **Mobile application**: v1 should not make architectural choices (e.g., web-only APIs, browser-only camera access patterns) that would block a future native or cross-platform mobile client. Prefer a backend/API layer that isn't coupled to a single frontend.
@@ -92,3 +93,11 @@ Implemented in `db/schema.ts` (Drizzle). Core entities:
 ## V2 ADDITIONS:
 - **Add admin role** whose function is to invite users (physicians, patients, and other admin) by email. They do not need to have messaging capabilities, but should be able to see a list of users (name, email, type)
 - **Develop an on-boarding process.** Once a user gets a "special link" via email from admin, they are sent to a page where they can create an account (of the type specified by the admin). Here, they tie the email admin sent to them to their name, a password, and can select or not accessible mode. 
+
+## Accessibility Preferences (LIM-15)
+- Every user (patient, physician, admin) has a `user_preferences` row (synced via the DB, missing row = defaults) editable at `/settings` under "Accessibility". Settings: text size, contrast, reduced motion, large touch targets, simplified layout, dyslexia-friendly font, bold text, message density, confirm-before-send, announce new messages (screen reader). Photo alt-text prompting is deferred (needs an alt-text field on `attachment`). Source of truth: `lib/preferences-shared.ts`.
+- **Admin onboarding hook (NOT built yet; do not build until the admin dashboard/onboarding exists):** when the V2 admin invite + onboarding flow is created, it should reuse what LIM-15 provides rather than re-implementing it:
+  - The admin's invite form can set **initial accessibility preferences** for the invitee (e.g. a patient who needs large text), stored on the invitation record as `initialPreferences` and validated with `parsePreferences()`.
+  - The onboarding page (where the invitee sets name + password and chooses accessible mode) pre-fills the shared `<AccessibilityForm />` component with those values; the invitee can confirm or change them.
+  - On account creation, call `savePreferences(userId, prefs)` (`lib/preferences.ts`) to persist them.
+- Until then, new users simply get the defaults and can change them at `/settings`.

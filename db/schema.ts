@@ -139,6 +139,26 @@ export const patientProfiles = pgTable("patient_profile", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Accessibility preferences, one row per user (any role). A missing
+// row means "all defaults" (see lib/preferences-shared.ts), so existing
+// users need no backfill. Values are validated in the app layer.
+export const userPreferences = pgTable("user_preferences", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  textSize: text("text_size").notNull().default("default"),
+  contrast: text("contrast").notNull().default("standard"),
+  reducedMotion: boolean("reduced_motion").notNull().default(false),
+  largeTouchTargets: boolean("large_touch_targets").notNull().default(false),
+  simplifiedLayout: boolean("simplified_layout").notNull().default(false),
+  dyslexiaFont: boolean("dyslexia_font").notNull().default(false),
+  boldText: boolean("bold_text").notNull().default(false),
+  messageDensity: text("message_density").notNull().default("comfortable"),
+  confirmBeforeSend: boolean("confirm_before_send").notNull().default(false),
+  announceNewMessages: boolean("announce_new_messages").notNull().default(true),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Administrator: oversees patient/physician interaction at the
 // data-model level. No admin-facing UI/workflows in v1 — this
 // table exists so the role and relationship are modeled now.

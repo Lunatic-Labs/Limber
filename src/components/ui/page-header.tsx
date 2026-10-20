@@ -9,7 +9,7 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle?: stri
 
 export function EmptyState({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-brand-200 bg-white px-6 py-10 text-center text-ink-muted">
+    <div className="rounded-xl border border-dashed border-brand-200 bg-card px-6 py-10 text-center text-ink-muted">
       {children}
     </div>
   );

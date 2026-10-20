@@ -30,6 +30,24 @@ const config: Config = {
           muted: "rgb(var(--c-ink-muted) / <alpha-value>)",
         },
       },
+      // Shared motion tokens. CSS-based, so the reduced-motion rules in
+      // globals.css apply to everything built from them.
+      transitionTimingFunction: {
+        out: "cubic-bezier(0.22, 1, 0.36, 1)",
+      },
+      transitionDuration: {
+        fast: "150ms",
+        base: "250ms",
+      },
+      keyframes: {
+        "fade-rise": {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        "fade-rise": "fade-rise 250ms cubic-bezier(0.22, 1, 0.36, 1) both",
+      },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
         legible: ["var(--font-legible)", "system-ui", "sans-serif"],

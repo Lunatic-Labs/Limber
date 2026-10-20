@@ -180,6 +180,7 @@ export function ChatView({
   const [polling, setPolling] = useState(!process.env.NEXT_PUBLIC_PUSHER_KEY);
 
   const listRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -283,7 +284,20 @@ export function ChatView({
   useLayoutEffect(() => {
     const el = listRef.current;
     if (el && stickToBottom.current) el.scrollTop = el.scrollHeight;
-  }, [ordered.length]);
+  }, [ordered.length, mounted]);
+
+  // Timestamps (added after mount) and lazy-loaded photos/videos make the
+  // content taller after the first scroll, so re-pin whenever it resizes.
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      const el = listRef.current;
+      if (el && stickToBottom.current) el.scrollTop = el.scrollHeight;
+    });
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, []);
 
   function handleScroll() {
     const el = listRef.current;
@@ -492,6 +506,7 @@ export function ChatView({
         aria-label={`Conversation with ${otherName}`}
         className="flex-1 overflow-y-auto px-3 py-4"
       >
+        <div ref={contentRef}>
         {ordered.length === 0 && (
           <p className="mt-8 text-center text-sm text-gray-500">
             No messages yet. Say hello to {otherName}.
@@ -565,6 +580,7 @@ export function ChatView({
             </div>
           );
         })}
+        </div>
       </div>
 
       {/* Composer */}

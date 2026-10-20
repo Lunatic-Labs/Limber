@@ -147,7 +147,6 @@ export const userPreferences = pgTable("user_preferences", {
     .primaryKey()
     .references(() => users.id, { onDelete: "cascade" }),
   textSize: text("text_size").notNull().default("default"),
-  theme: text("theme").notNull().default("system"),
   contrast: text("contrast").notNull().default("standard"),
   reducedMotion: boolean("reduced_motion").notNull().default(false),
   largeTouchTargets: boolean("large_touch_targets").notNull().default(false),

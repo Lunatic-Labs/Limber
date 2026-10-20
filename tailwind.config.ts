@@ -21,8 +21,7 @@ const config: Config = {
           800: "rgb(var(--c-brand-800) / <alpha-value>)",
           900: "rgb(var(--c-brand-900) / <alpha-value>)",
         },
-        // Card/panel background. (Not `white`, so `text-white` on brand
-        // buttons stays white in dark mode.)
+        // Card/panel background.
         card: "rgb(var(--c-card) / <alpha-value>)",
         surface: "rgb(var(--c-surface) / <alpha-value>)",
         ink: {

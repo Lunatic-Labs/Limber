@@ -17,7 +17,6 @@ export async function getPreferences(userId: string): Promise<Preferences> {
   if (!row) return DEFAULT_PREFERENCES;
   const parsed = parsePreferences({
     textSize: row.textSize,
-    theme: row.theme,
     contrast: row.contrast,
     reducedMotion: row.reducedMotion,
     largeTouchTargets: row.largeTouchTargets,

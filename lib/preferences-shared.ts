@@ -3,13 +3,11 @@
 // server, client, and in node:test. The DB layer is lib/preferences.ts.
 
 export const TEXT_SIZES = ["default", "large", "xlarge"] as const;
-export const THEMES = ["system", "light", "dark"] as const;
 export const CONTRASTS = ["standard", "high"] as const;
 export const DENSITIES = ["comfortable", "compact"] as const;
 
 export type Preferences = {
   textSize: (typeof TEXT_SIZES)[number];
-  theme: (typeof THEMES)[number];
   contrast: (typeof CONTRASTS)[number];
   reducedMotion: boolean;
   largeTouchTargets: boolean;
@@ -23,7 +21,6 @@ export type Preferences = {
 
 export const DEFAULT_PREFERENCES: Preferences = {
   textSize: "default",
-  theme: "system",
   contrast: "standard",
   reducedMotion: false,
   largeTouchTargets: false,
@@ -37,7 +34,6 @@ export const DEFAULT_PREFERENCES: Preferences = {
 
 const ENUMS: Record<string, readonly string[]> = {
   textSize: TEXT_SIZES,
-  theme: THEMES,
   contrast: CONTRASTS,
   messageDensity: DENSITIES,
 };
@@ -87,7 +83,6 @@ export function parsePreferences(
 export function preferencesToDataAttributes(p: Preferences) {
   return {
     "data-text-size": p.textSize,
-    "data-theme": p.theme,
     "data-contrast": p.contrast,
     "data-reduced-motion": String(p.reducedMotion),
     "data-large-targets": String(p.largeTouchTargets),
@@ -110,7 +105,10 @@ export function serializePreferencesCookie(p: Preferences): string {
 export function parsePreferencesCookie(raw: string | undefined): Preferences {
   if (!raw) return DEFAULT_PREFERENCES;
   try {
-    const r = parsePreferences(JSON.parse(decodeURIComponent(raw)));
+    const obj = JSON.parse(decodeURIComponent(raw));
+    // Cookies written before themes were removed still carry a `theme` key.
+    if (obj && typeof obj === "object") delete obj.theme;
+    const r = parsePreferences(obj);
     return r.ok ? r.value : DEFAULT_PREFERENCES;
   } catch {
     return DEFAULT_PREFERENCES;

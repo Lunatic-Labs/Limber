@@ -14,6 +14,7 @@ import { buttonClass } from "@/components/ui/button";
 export function AccessibilitySettings({ initial }: { initial: Preferences }) {
   const [prefs, setPrefs] = useState(initial);
   const [status, setStatus] = useState("");
+  const [saving, setSaving] = useState(false);
   const saved = useRef(initial);
   const seq = useRef(0);
 
@@ -24,7 +25,9 @@ export function AccessibilitySettings({ initial }: { initial: Preferences }) {
   }
 
   async function save(next: Preferences) {
+    if (saving) return;
     const mine = ++seq.current;
+    setSaving(true);
     setPrefs(next);
     apply(next);
     setStatus("Saving…");
@@ -43,6 +46,8 @@ export function AccessibilitySettings({ initial }: { initial: Preferences }) {
         apply(saved.current);
         setStatus("Couldn't save your change. Please try again.");
       }
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -51,10 +56,11 @@ export function AccessibilitySettings({ initial }: { initial: Preferences }) {
       <p role="status" aria-live="polite" className="mb-4 min-h-[1.5rem] text-sm text-ink-muted">
         {status}
       </p>
-      <AccessibilityForm value={prefs} onChange={save} />
+      <AccessibilityForm value={prefs} onChange={save} disabled={saving} />
       <button
         type="button"
         onClick={() => save(DEFAULT_PREFERENCES)}
+        disabled={saving}
         className={buttonClass("secondary", "mt-6")}
       >
         Reset to defaults

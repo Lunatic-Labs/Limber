@@ -6,7 +6,10 @@ import type { Preferences } from "@/lib/preferences-shared";
 // Reused by /settings and (later) the admin-invite onboarding step —
 // see "Accessibility Preferences" in constitution.md.
 
-type ChoiceKey = "textSize" | "theme" | "contrast" | "messageDensity";
+// Whitespace-free so aria-labelledby treats it as a single ID reference.
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+type ChoiceKey = "textSize" | "contrast" | "messageDensity";
 type ToggleKey =
   | "reducedMotion"
   | "largeTouchTargets"
@@ -30,11 +33,6 @@ const sections: {
         key: "textSize",
         label: "Text size",
         options: [["default", "Default"], ["large", "Large"], ["xlarge", "Extra large"]],
-      },
-      {
-        key: "theme",
-        label: "Theme",
-        options: [["system", "Match my device"], ["light", "Light"], ["dark", "Dark"]],
       },
       {
         key: "contrast",
@@ -96,10 +94,10 @@ export function AccessibilityForm({
       {sections.map((section) => (
         <section
           key={section.title}
-          aria-labelledby={`a11y-${section.title}`}
+          aria-labelledby={`a11y-${slug(section.title)}`}
           className="rounded-xl border border-brand-100 bg-card p-5 shadow-sm"
         >
-          <h2 id={`a11y-${section.title}`} className="text-lg font-semibold">
+          <h2 id={`a11y-${slug(section.title)}`} className="text-lg font-semibold">
             {section.title}
           </h2>
           <p className="mb-4 text-sm text-ink-muted">{section.blurb}</p>

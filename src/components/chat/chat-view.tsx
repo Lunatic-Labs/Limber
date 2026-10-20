@@ -554,7 +554,7 @@ export function ChatView({
                 {m.body && (
                 <div
                   className={[
-                    "max-w-[75%] whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-[15px] leading-snug",
+                    "max-w-[75%] whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-[0.9375rem] leading-snug",
                     m.attachments.length > 0 ? "mt-1" : "",
                     mine
                       ? "bg-brand-600 text-white"
@@ -670,7 +670,7 @@ export function ChatView({
             maxLength={MESSAGE_MAX_LENGTH}
             placeholder="Message"
             aria-label="Message"
-            className="max-h-36 min-h-[40px] flex-1 resize-none rounded-lg border border-gray-300 bg-card px-3 py-2 text-[15px] leading-snug outline-none focus:border-brand-500"
+            className="max-h-36 min-h-[40px] flex-1 resize-none rounded-lg border border-gray-300 bg-card px-3 py-2 text-[0.9375rem] leading-snug outline-none focus:border-brand-500"
           />
           <button
             type="button"

@@ -8,15 +8,14 @@ import {
   parsePreferencesCookie,
 } from "../lib/preferences-shared";
 
-test("defaults: system theme, default size, announcements on", () => {
-  assert.equal(DEFAULT_PREFERENCES.theme, "system");
+test("defaults: default size, announcements on", () => {
   assert.equal(DEFAULT_PREFERENCES.textSize, "default");
   assert.equal(DEFAULT_PREFERENCES.announceNewMessages, true);
   assert.equal(DEFAULT_PREFERENCES.reducedMotion, false);
 });
 
 test("parsePreferences accepts a full valid object", () => {
-  const input = { ...DEFAULT_PREFERENCES, textSize: "xlarge", theme: "dark" };
+  const input = { ...DEFAULT_PREFERENCES, textSize: "xlarge" };
   const r = parsePreferences(input);
   assert.equal(r.ok, true);
   if (r.ok) assert.deepEqual(r.value, input);
@@ -27,7 +26,7 @@ test("parsePreferences fills missing keys with defaults (partial update)", () =>
   assert.equal(r.ok, true);
   if (r.ok) {
     assert.equal(r.value.contrast, "high");
-    assert.equal(r.value.theme, "system");
+    assert.equal(r.value.textSize, "default");
   }
 });
 
@@ -42,7 +41,7 @@ test("parsePreferences merges partial input onto a base", () => {
 });
 
 test("parsePreferences rejects bad enum values", () => {
-  for (const bad of [{ textSize: "huge" }, { theme: "blue" }, { contrast: 1 }, { messageDensity: null }]) {
+  for (const bad of [{ textSize: "huge" }, { theme: "dark" }, { contrast: "dark" }, { contrast: 1 }, { messageDensity: null }]) {
     assert.equal(parsePreferences(bad).ok, false, JSON.stringify(bad));
   }
 });
@@ -65,7 +64,6 @@ test("parsePreferences rejects unknown keys", () => {
 test("data attributes: defaults produce no overrides", () => {
   const a = preferencesToDataAttributes(DEFAULT_PREFERENCES);
   assert.equal(a["data-text-size"], "default");
-  assert.equal(a["data-theme"], "system");
   assert.equal(a["data-contrast"], "standard");
   assert.equal(a["data-reduced-motion"], "false");
   assert.equal(a["data-large-targets"], "false");
@@ -75,7 +73,6 @@ test("data attributes reflect chosen preferences", () => {
   const a = preferencesToDataAttributes({
     ...DEFAULT_PREFERENCES,
     textSize: "large",
-    theme: "dark",
     contrast: "high",
     reducedMotion: true,
     largeTouchTargets: true,
@@ -86,7 +83,6 @@ test("data attributes reflect chosen preferences", () => {
   });
   assert.deepEqual(a, {
     "data-text-size": "large",
-    "data-theme": "dark",
     "data-contrast": "high",
     "data-reduced-motion": "true",
     "data-large-targets": "true",
@@ -98,13 +94,18 @@ test("data attributes reflect chosen preferences", () => {
 });
 
 test("cookie round-trips preferences", () => {
-  const prefs = { ...DEFAULT_PREFERENCES, theme: "dark" as const, textSize: "xlarge" as const };
+  const prefs = { ...DEFAULT_PREFERENCES, textSize: "xlarge" as const };
   const parsed = parsePreferencesCookie(serializePreferencesCookie(prefs));
   assert.deepEqual(parsed, prefs);
 });
 
+test("cookie from before themes were removed still parses", () => {
+  const legacy = encodeURIComponent(JSON.stringify({ ...DEFAULT_PREFERENCES, theme: "dark", textSize: "large" }));
+  assert.deepEqual(parsePreferencesCookie(legacy), { ...DEFAULT_PREFERENCES, textSize: "large" });
+});
+
 test("cookie parsing falls back to defaults on garbage", () => {
-  for (const bad of [undefined, "", "not json", "%7B%22theme%22%3A%22neon%22%7D"]) {
+  for (const bad of [undefined, "", "not json", "%7B%22textSize%22%3A%22neon%22%7D"]) {
     assert.deepEqual(parsePreferencesCookie(bad), DEFAULT_PREFERENCES);
   }
 });

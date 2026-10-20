@@ -56,7 +56,12 @@ export function AppShell({
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
-    const measure = () => setHeaderH(el.offsetHeight);
+    const measure = () => {
+      setHeaderH(el.offsetHeight);
+      // Header is display:none at desktop width; an open drawer would
+      // otherwise stay "open" (page inert, scroll locked) with no close button.
+      if (el.offsetHeight === 0) setOpen(false);
+    };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);

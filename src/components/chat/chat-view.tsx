@@ -1,5 +1,6 @@
 "use client";
 
+import { Avatar } from "@/components/ui/avatar";
 import Link from "next/link";
 import {
   useCallback,
@@ -462,7 +463,7 @@ export function ChatView({
   return (
     <div className="mx-auto flex h-[calc(100dvh-7rem)] min-h-[420px] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-brand-100 bg-card shadow-sm lg:h-[calc(100dvh-6rem)]">
       {/* Header */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-brand-100 bg-brand-50 px-3 py-2">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-brand-100 bg-brand-50 px-3 py-1.5">
         <Link
           href={backHref}
           aria-label="Back to conversations"
@@ -472,9 +473,12 @@ export function ChatView({
             <path d="M15 5l-7 7 7 7" />
           </svg>
         </Link>
-        <div className="text-center">
-          <p className="text-base font-semibold leading-tight">{otherName}</p>
-          <p className="text-xs leading-tight text-gray-500">{planTitle}</p>
+        <div className="flex min-w-0 max-w-[60vw] items-center gap-2 sm:max-w-xs">
+          <Avatar name={otherName} size="sm" />
+          <div className="min-w-0 text-left">
+            <p className="truncate text-base font-semibold leading-tight">{otherName}</p>
+            <p className="truncate text-xs leading-tight text-gray-500">{planTitle}</p>
+          </div>
         </div>
         <span />
       </div>

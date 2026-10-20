@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Wordmark } from "@/components/ui/wordmark";
@@ -25,12 +25,30 @@ export function AppShell({
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerH, setHeaderH] = useState(0);
 
-  const sidebar = (
+  // The top bar stays above the drawer (so the button can become an X);
+  // the drawer starts right below it.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const renderSidebar = (showWordmark: boolean) => (
     <div className="flex h-full flex-col bg-card">
-      <div className="px-5 py-5">
-        <Wordmark href={homeHref} />
-      </div>
+      {showWordmark ? (
+        <div className="px-5 py-5">
+          <Wordmark href={homeHref} />
+        </div>
+      ) : (
+        <div className="h-3" />
+      )}
       <nav aria-label="Main" className="flex-1 space-y-1 px-3">
         {nav.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -68,27 +86,46 @@ export function AppShell({
     <div className="min-h-screen bg-surface lg:pl-64">
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-brand-100 lg:block">
-        {sidebar}
+        {renderSidebar(true)}
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-brand-100 bg-card px-4 py-2 lg:hidden">
+      <header ref={headerRef} className="sticky top-0 z-50 flex items-center justify-between border-b border-brand-100 bg-card px-4 py-2 lg:hidden">
         <Wordmark href={homeHref} />
         <button
           type="button"
-          onClick={() => setOpen(true)}
-          aria-label="Open menu"
-          className="flex h-11 w-11 items-center justify-center rounded-lg text-brand-800 hover:bg-brand-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          onClick={() => setOpen((o) => !o)}
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-brand-800 transition-colors duration-fast hover:bg-brand-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-            <path d="M4 6h16M4 12h16M4 18h16" />
+            <path
+              d="M4 6h16"
+              className={`origin-center transition-transform duration-base ease-out ${
+                open ? "translate-y-[6px] rotate-45" : ""
+              }`}
+              style={{ transformBox: "fill-box" }}
+            />
+            <path
+              d="M4 12h16"
+              className={`origin-center transition-opacity duration-fast ${open ? "opacity-0" : ""}`}
+            />
+            <path
+              d="M4 18h16"
+              className={`origin-center transition-transform duration-base ease-out ${
+                open ? "-translate-y-[6px] -rotate-45" : ""
+              }`}
+              style={{ transformBox: "fill-box" }}
+            />
           </svg>
         </button>
       </header>
 
       {/* Mobile drawer: always mounted so it can animate out; inert while closed. */}
       <div
-        className={`fixed inset-0 z-40 transition-[visibility] duration-base lg:hidden ${
+        style={{ top: headerH }}
+        className={`fixed inset-x-0 bottom-0 z-40 transition-[visibility] duration-base lg:hidden ${
           open ? "visible" : "invisible"
         }`}
         role="dialog"
@@ -110,7 +147,7 @@ export function AppShell({
             open ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          {sidebar}
+          {renderSidebar(false)}
         </div>
       </div>
 

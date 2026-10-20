@@ -1,11 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
 import { Inter, Atkinson_Hyperlegible } from "next/font/google";
 import { auth } from "@/auth";
 import { getPreferences } from "@/lib/preferences";
 import {
-  PREFERENCES_COOKIE,
-  parsePreferencesCookie,
+  DEFAULT_PREFERENCES,
   preferencesToDataAttributes,
 } from "@/lib/preferences-shared";
 import "./globals.css";
@@ -35,11 +33,12 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // Signed in: the DB is the source of truth (so settings follow the user
-  // across devices). Signed out (e.g. login page): use the cookie mirror.
+  // across devices). Signed out: always defaults, so one user's settings
+  // never linger after logout (or leak to the next person on a shared device).
   const session = await auth();
   const prefs = session?.user
     ? await getPreferences(session.user.id)
-    : parsePreferencesCookie((await cookies()).get(PREFERENCES_COOKIE)?.value);
+    : DEFAULT_PREFERENCES;
 
   return (
     <html

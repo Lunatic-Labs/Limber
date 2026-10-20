@@ -4,7 +4,6 @@ import { getPreferences, savePreferences } from "@/lib/preferences";
 import {
   PREFERENCES_COOKIE,
   parsePreferences,
-  serializePreferencesCookie,
 } from "@/lib/preferences-shared";
 
 // Users can only ever read/write their own preferences: the target
@@ -42,10 +41,7 @@ export async function PUT(req: Request) {
   await savePreferences(session.user.id, parsed.value);
 
   const res = NextResponse.json(parsed.value);
-  res.cookies.set(PREFERENCES_COOKIE, serializePreferencesCookie(parsed.value), {
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: "lax",
-  });
+  // Clear the legacy signed-out mirror cookie; it is no longer used.
+  res.cookies.delete(PREFERENCES_COOKIE);
   return res;
 }

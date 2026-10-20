@@ -26,7 +26,30 @@ export function AppShell({
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const [headerH, setHeaderH] = useState(0);
+
+  // Close on route change.
+  useEffect(() => setOpen(false), [pathname]);
+
+  // While open: Escape closes (focus returns to the menu button) and the
+  // page behind doesn't scroll.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   // The top bar stays above the drawer (so the button can become an X);
   // the drawer starts right below it.
@@ -58,7 +81,7 @@ export function AppShell({
               href={item.href}
               onClick={() => setOpen(false)}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-[44px] items-center rounded-lg px-3 text-base font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+              className={`flex min-h-[44px] items-center rounded-lg px-3 text-base font-medium transition-colors duration-fast focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
                 active
                   ? "bg-brand-50 text-brand-800"
                   : "text-ink-muted hover:bg-brand-50 hover:text-brand-800"
@@ -93,6 +116,7 @@ export function AppShell({
       <header ref={headerRef} className="sticky top-0 z-50 flex items-center justify-between border-b border-brand-100 bg-card px-4 py-2 lg:hidden">
         <Wordmark href={homeHref} />
         <button
+          ref={buttonRef}
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-label={open ? "Close menu" : "Open menu"}
@@ -151,7 +175,9 @@ export function AppShell({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-8 sm:py-8">{children}</div>
+      <div inert={open} className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-8 sm:py-8">
+        {children}
+      </div>
     </div>
   );
 }

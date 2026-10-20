@@ -251,6 +251,25 @@ export const appointments = pgTable("appointment", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Invitation: an administrator invites someone by email; the invitee uses
+// the one-time link to create their account (onboarding). Only a hash of
+// the token is stored. `physicianUserId` is set for patient invites (a
+// patient always has exactly one assigned physician).
+export const invitations = pgTable("invitation", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: text("email").notNull(),
+  role: userRoleEnum("role").notNull(),
+  physicianUserId: uuid("physician_user_id").references(() => users.id),
+  tokenHash: text("token_hash").notNull().unique(),
+  invitedByUserId: uuid("invited_by_user_id")
+    .notNull()
+    .references(() => users.id),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  revokedAt: timestamp("revoked_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ============================================================
 // Relations (for Drizzle's relational query API)
 // ============================================================

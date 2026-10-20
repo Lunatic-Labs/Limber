@@ -31,7 +31,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        const username = credentials?.username as string | undefined;
+        let username = credentials?.username as string | undefined;
+        // Invited users sign in with their email as the username; emails
+        // are stored lowercase, so match case-insensitively for them.
+        if (username?.includes("@")) username = username.trim().toLowerCase();
         const password = credentials?.password as string | undefined;
         if (!username || !password) return null;
 

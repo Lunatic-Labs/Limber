@@ -86,18 +86,33 @@ export function AppShell({
         </button>
       </header>
 
-      {/* Mobile drawer */}
-      {open && (
-        <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <button
-            type="button"
-            aria-label="Close menu"
-            onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-slate-900/40"
-          />
-          <div className="absolute inset-y-0 right-0 w-72 max-w-[85%] shadow-xl">{sidebar}</div>
+      {/* Mobile drawer: always mounted so it can animate out; inert while closed. */}
+      <div
+        className={`fixed inset-0 z-40 transition-[visibility] duration-base lg:hidden ${
+          open ? "visible" : "invisible"
+        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        aria-hidden={!open}
+        inert={!open}
+      >
+        <button
+          type="button"
+          aria-label="Close menu"
+          onClick={() => setOpen(false)}
+          className={`absolute inset-0 bg-slate-900/40 transition-opacity duration-base ease-out ${
+            open ? "opacity-100" : "opacity-0"
+          }`}
+        />
+        <div
+          className={`absolute inset-y-0 right-0 w-72 max-w-[85%] shadow-xl transition-transform duration-base ease-out ${
+            open ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {sidebar}
         </div>
-      )}
+      </div>
 
       <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-8 sm:py-8">{children}</div>
     </div>

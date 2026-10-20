@@ -95,7 +95,7 @@ export function AppShell({
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-slate-900/40"
           />
-          <div className="absolute inset-y-0 left-0 w-72 max-w-[85%] shadow-xl">{sidebar}</div>
+          <div className="absolute inset-y-0 right-0 w-72 max-w-[85%] shadow-xl">{sidebar}</div>
         </div>
       )}
 

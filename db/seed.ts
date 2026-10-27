@@ -118,6 +118,7 @@ async function seed() {
         patientUserId: patientUser.id,
         physicianUserId: physicianUser.id,
         title: "Sample plan of care",
+        diagnosis: "Sample diagnosis (development data)",
         description: "Sample data for development.",
         startDate: new Date(),
       })

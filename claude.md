@@ -158,3 +158,12 @@ Hand-authored (this session's npm registry access is blocked by org egress polic
 - Chat honors `announceNewMessages` (aria-live), `confirmBeforeSend`, and `messageDensity`.
 - Not built: photo alt-text prompt (needs an alt field on `attachment`); admin-preset preferences during onboarding (admin dashboard doesn't exist — hook documented in constitution.md).
 - No tests for the API route / UI yet (repo has no route-test harness); `npm run lint` has no ESLint config (pre-existing).
+
+## Plans of care (LIM-21 / LIM-18)
+- `plan_of_care` gained `diagnosis` (nullable only so old rows need no backfill; required by the app on create) and `archivedAt`. **Run `npm run db:push`.** No enum change: `archived` already existed.
+- Pure rules + tests: `lib/plans-shared.ts`, `tests/plans-shared.test.ts` (input validation; `canSendMessages` / `canArchivePlan`).
+- Physician creates a plan at `/physician/plans/new` (`?patient=<id>` preselects) via `POST /api/plans`. Only the physician's own assigned patients are accepted. A plan has one patient; the plan *is* the chat thread, so creating it opens the conversation and the physician lands in it.
+- Archive: `POST /api/plans/[id]/archive`, plan's physician only, one-way, sets status `archived`, `archivedAt`, and `endDate` if empty. Button is in the chat header (physician, non-archived plans only), with a confirm prompt.
+- Archived plans are read-only: `POST /api/plans/[id]/messages` and the attachment upload-token route return 409; GET messages and file downloads still work. The chat shows a notice instead of the composer; a chat left open when the plan is archived locks on its next failed send (409). Live push of the archive event to an open chat is not built.
+- Diagnosis is shown on both dashboards and in the chat header.
+- Details view/edit: `/patient/plans/[id]/details` and `/physician/plans/[id]/details` (linked from a "Details" button in the chat header) show title, diagnosis, notes, start date, patient and physician to both roles. The plan's physician can edit title, diagnosis, notes and start date via `PATCH /api/plans/[id]` (`validatePlanUpdate`, `canEditPlan`). The patient can't be changed. Archived plans can't be edited.

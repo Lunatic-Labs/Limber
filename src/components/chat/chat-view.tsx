@@ -115,8 +115,6 @@ type Props = {
   planDiagnosis?: string | null;
   // Archived plans are read-only: history is shown, the composer is not.
   archived?: boolean;
-  // Extra control for the header's right side (e.g. the physician's Archive button).
-  headerAction?: React.ReactNode;
   currentUserId: string;
   otherName: string;
   initialMessages: ChatMessage[];
@@ -169,7 +167,6 @@ export function ChatView({
   planTitle,
   planDiagnosis = null,
   archived: archivedProp = false,
-  headerAction,
   currentUserId,
   otherName,
   initialMessages,
@@ -523,11 +520,13 @@ export function ChatView({
               </p>
             )}
           </div>
-          <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M9 5l7 7-7 7" />
+          <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-brand-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 11v5" />
+            <path d="M12 8h.01" />
           </svg>
         </Link>
-        <div className="justify-self-end">{headerAction}</div>
+        <div aria-hidden />
       </div>
 
       {/* Messages */}

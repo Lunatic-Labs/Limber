@@ -5,15 +5,16 @@ export default async function PlanConversationPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string | string[] }>;
+  searchParams: Promise<{ tab?: string | string[]; edit?: string | string[] }>;
 }) {
   const { id } = await params;
-  const { tab } = await searchParams;
+  const { tab, edit } = await searchParams;
   return (
     <ConversationDetails
       planId={id}
       chatHref={`/physician/plans/${id}`}
       tab={tab}
+      edit={edit}
     />
   );
 }

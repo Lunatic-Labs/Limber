@@ -158,3 +158,11 @@ Hand-authored (this session's npm registry access is blocked by org egress polic
 - Chat honors `announceNewMessages` (aria-live), `confirmBeforeSend`, and `messageDensity`.
 - Not built: photo alt-text prompt (needs an alt field on `attachment`); admin-preset preferences during onboarding (admin dashboard doesn't exist — hook documented in constitution.md).
 - No tests for the API route / UI yet (repo has no route-test harness); `npm run lint` has no ESLint config (pre-existing).
+
+
+## Conversation details (LIM-19)
+- Tapping the other person's name/avatar in the chat header opens `/patient|physician/plans/[id]/details?tab=info|media|documents` (shared server component `src/components/chat/conversation-details.tsx`, modeled on iOS Messages' contact details). Unknown/missing `tab` falls back to Info.
+- Tabs: **Info** (POC title, status, date range, the physician's `description`, and an empty progress-bar placeholder — no logic behind it yet), **Photos & Videos** (3-column square grid, no month headings, video tiles show a duration badge once metadata loads, tap opens a full-screen `<dialog>` viewer with swipe/arrow nav and download), **Documents** (list with size, sender, date).
+- API: `GET /api/plans/[id]/media?tab=media|documents&before=<cursor>&limit=<n>` (30 default, 60 max), plan-membership checked via `getPlanForUser` (404 otherwise). Cursor is `(createdAt, id)` and compares at millisecond precision (`lib/media.ts`). The first page is server-rendered; "Load more" fetches the rest.
+- Pure logic + tests: `lib/media-shared.ts`, `tests/media-shared.test.ts`. Files still stream through the private attachment route; no Blob URL reaches the browser.
+- Not built: "show in chat" jump, sender filter, real thumbnails (full files load lazily), stored video duration, structured POC fields beyond `description`, route/UI tests (no harness).

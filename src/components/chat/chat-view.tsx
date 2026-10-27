@@ -116,6 +116,7 @@ type Props = {
   otherName: string;
   initialMessages: ChatMessage[];
   backHref: string;
+  detailsHref: string;
   announceNewMessages?: boolean;
   confirmBeforeSend?: boolean;
   compact?: boolean;
@@ -165,6 +166,7 @@ export function ChatView({
   otherName,
   initialMessages,
   backHref,
+  detailsHref,
   announceNewMessages = true,
   confirmBeforeSend = false,
   compact = false,
@@ -487,13 +489,20 @@ export function ChatView({
             <path d="M15 5l-7 7 7 7" />
           </svg>
         </Link>
-        <div className="flex min-w-0 max-w-[60vw] items-center gap-2 sm:max-w-xs">
+        <Link
+          href={detailsHref}
+          aria-label={`Photos, documents and plan details for ${otherName}`}
+          className="flex min-w-0 max-w-[60vw] items-center gap-2 rounded-lg px-2 py-1 transition-colors duration-fast hover:bg-brand-100 active:bg-brand-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:max-w-xs"
+        >
           <Avatar name={otherName} size="sm" />
           <div className="min-w-0 text-left">
             <p className="truncate text-base font-semibold leading-tight">{otherName}</p>
             <p className="truncate text-xs leading-tight text-gray-500">{planTitle}</p>
           </div>
-        </div>
+          <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
         <span />
       </div>
 

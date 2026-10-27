@@ -6,5 +6,9 @@ export default async function PlanChatPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <ChatScreen planId={id} backHref="/physician" />;
+  return <ChatScreen
+      planId={id}
+      backHref="/physician"
+      detailsHref={`/physician/plans/${id}/details`}
+    />;
 }

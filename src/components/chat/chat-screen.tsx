@@ -13,9 +13,11 @@ import { ChatView } from "./chat-view";
 export async function ChatScreen({
   planId,
   backHref,
+  detailsHref,
 }: {
   planId: string;
   backHref: string;
+  detailsHref: string;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
@@ -45,6 +47,7 @@ export async function ChatScreen({
       otherName={other?.name ?? other?.username ?? "Unknown"}
       initialMessages={initialMessages}
       backHref={backHref}
+      detailsHref={detailsHref}
       announceNewMessages={prefs.announceNewMessages}
       confirmBeforeSend={prefs.confirmBeforeSend}
       compact={prefs.messageDensity === "compact"}

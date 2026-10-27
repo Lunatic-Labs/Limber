@@ -101,3 +101,11 @@ Implemented in `db/schema.ts` (Drizzle). Core entities:
   - The onboarding page (where the invitee sets name + password and chooses accessible mode) pre-fills the shared `<AccessibilityForm />` component with those values; the invitee can confirm or change them.
   - On account creation, call `savePreferences(userId, prefs)` (`lib/preferences.ts`) to persist them.
 - Until then, new users simply get the defaults and can change them at `/settings`.
+
+  ## Plans of care (LIM-21 and LIM-18)
+  - Physicians should be able to create a plan of care
+  - Physicians should be able to assign patients to a plan of care
+  - The plan of care includes information about diagnosis
+  - The plan of care is how the chat thread gets created
+  - Physicians should be able to archive a plan of care once it has been deemed complete.
+  - Once a plan of care is archived, the messages and files can be viewed, but new messages can no longer be sent.

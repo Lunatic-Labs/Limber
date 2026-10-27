@@ -186,10 +186,17 @@ export const plansOfCare = pgTable("plan_of_care", {
     .notNull()
     .references(() => users.id),
   title: text("title").notNull(),
+  // What the plan is treating. Required when a physician creates a plan
+  // (enforced in the app layer); nullable only so plans created before
+  // this column existed (e.g. seed data) need no backfill.
+  diagnosis: text("diagnosis"),
   description: text("description"),
   status: planOfCareStatusEnum("status").notNull().default("active"),
   startDate: timestamp("start_date", { mode: "date" }).notNull(),
   endDate: timestamp("end_date", { mode: "date" }),
+  // Set when the physician archives the plan. Archived plans are
+  // read-only: history stays viewable, but no new messages or files.
+  archivedAt: timestamp("archived_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

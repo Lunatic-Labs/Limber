@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getPlanForUser } from "@/lib/chat";
+import { canEditPlan } from "@/lib/plans-shared";
 import { getMediaPage, getPlanDetails } from "@/lib/media";
 import {
   DEFAULT_MEDIA_PAGE_SIZE,
@@ -63,8 +64,13 @@ export async function ConversationDetails({
   ]);
   if (!details) notFound();
 
+  const canEdit =
+    session.user.role === "physician" &&
+    plan.physicianUserId === session.user.id &&
+    canEditPlan(details.status);
+
   const otherName = other?.name ?? other?.username ?? "Unknown";
-  const detailsPath = `${chatHref}/details`;
+  const detailsPath = `${chatHref}/conversation`;
 
   return (
     <div className="mx-auto w-full max-w-2xl overflow-hidden rounded-xl border border-brand-100 bg-card shadow-sm">
@@ -129,9 +135,21 @@ export async function ConversationDetails({
               <p className="mt-1 text-sm text-gray-600">
                 {formatPlanDateRange(details.startDate, details.endDate)}
               </p>
+              {details.diagnosis && (
+                <p className="mt-3 text-sm">
+                  <span className="font-semibold">Diagnosis: </span>
+                  {details.diagnosis}
+                </p>
+              )}
               <p className="mt-3 whitespace-pre-wrap text-sm text-gray-800">
                 {details.description?.trim() || "No details added yet."}
               </p>
+              <Link
+                href={`${chatHref}/details`}
+                className="mt-3 inline-block text-sm font-semibold text-brand-700 underline hover:text-brand-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
+                {canEdit ? "View or edit plan details" : "View full plan details"}
+              </Link>
             </section>
 
             <section aria-labelledby="progress-heading">

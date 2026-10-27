@@ -21,6 +21,11 @@ export async function getPlanForUser(planId: string, userId: string) {
     .select({
       id: plansOfCare.id,
       title: plansOfCare.title,
+      diagnosis: plansOfCare.diagnosis,
+      description: plansOfCare.description,
+      startDate: plansOfCare.startDate,
+      status: plansOfCare.status,
+      endDate: plansOfCare.endDate,
       patientUserId: plansOfCare.patientUserId,
       physicianUserId: plansOfCare.physicianUserId,
     })

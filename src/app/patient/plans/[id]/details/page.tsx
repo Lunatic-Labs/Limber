@@ -1,19 +1,16 @@
-import { ConversationDetails } from "@/components/chat/conversation-details";
+import { PlanDetailsScreen } from "@/components/plans/plan-details-screen";
 
 export default async function PlanDetailsPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string | string[] }>;
 }) {
   const { id } = await params;
-  const { tab } = await searchParams;
   return (
-    <ConversationDetails
+    <PlanDetailsScreen
       planId={id}
       chatHref={`/patient/plans/${id}`}
-      tab={tab}
+      backHref="/patient"
     />
   );
 }

@@ -159,9 +159,18 @@ Hand-authored (this session's npm registry access is blocked by org egress polic
 - Not built: photo alt-text prompt (needs an alt field on `attachment`); admin-preset preferences during onboarding (admin dashboard doesn't exist — hook documented in constitution.md).
 - No tests for the API route / UI yet (repo has no route-test harness); `npm run lint` has no ESLint config (pre-existing).
 
+## Plans of care (LIM-21 / LIM-18)
+- `plan_of_care` gained `diagnosis` (nullable only so old rows need no backfill; required by the app on create) and `archivedAt`. **Run `npm run db:push`.** No enum change: `archived` already existed.
+- Pure rules + tests: `lib/plans-shared.ts`, `tests/plans-shared.test.ts` (input validation; `canSendMessages` / `canArchivePlan`).
+- Physician creates a plan at `/physician/plans/new` (`?patient=<id>` preselects) via `POST /api/plans`. Only the physician's own assigned patients are accepted. A plan has one patient; the plan *is* the chat thread, so creating it opens the conversation and the physician lands in it.
+- Archive: `POST /api/plans/[id]/archive`, plan's physician only, one-way, sets status `archived`, `archivedAt`, and `endDate` if empty. Button is in the chat header (physician, non-archived plans only), with a confirm prompt.
+- Archived plans are read-only: `POST /api/plans/[id]/messages` and the attachment upload-token route return 409; GET messages and file downloads still work. The chat shows a notice instead of the composer; a chat left open when the plan is archived locks on its next failed send (409). Live push of the archive event to an open chat is not built.
+- Diagnosis is shown on both dashboards and in the chat header.
+- Details view/edit: `/patient/plans/[id]/details` and `/physician/plans/[id]/details` (linked from a "Details" button in the chat header) show title, diagnosis, notes, start date, patient and physician to both roles. The plan's physician can edit title, diagnosis, notes and start date via `PATCH /api/plans/[id]` (`validatePlanUpdate`, `canEditPlan`). The patient can't be changed. Archived plans can't be edited.
+
 
 ## Conversation details (LIM-19)
-- Tapping the other person's name/avatar in the chat header opens `/patient|physician/plans/[id]/details?tab=info|media|documents` (shared server component `src/components/chat/conversation-details.tsx`, modeled on iOS Messages' contact details). Unknown/missing `tab` falls back to Info.
+- Tapping the other person's name/avatar in the chat header opens `/patient|physician/plans/[id]/conversation?tab=info|media|documents` (shared server component `src/components/chat/conversation-details.tsx`, modeled on iOS Messages' contact details). Unknown/missing `tab` falls back to Info. (`/plans/[id]/details` is LIM-21's plan view/edit page; the Info tab links to it.)
 - Tabs: **Info** (POC title, status, date range, the physician's `description`, and an empty progress-bar placeholder — no logic behind it yet), **Photos & Videos** (3-column square grid, no month headings, video tiles show a duration badge once metadata loads, tap opens a full-screen `<dialog>` viewer with swipe/arrow nav and download), **Documents** (list with size, sender, date).
 - API: `GET /api/plans/[id]/media?tab=media|documents&before=<cursor>&limit=<n>` (30 default, 60 max), plan-membership checked via `getPlanForUser` (404 otherwise). Cursor is `(createdAt, id)` and compares at millisecond precision (`lib/media.ts`). The first page is server-rendered; "Load more" fetches the rest.
 - Pure logic + tests: `lib/media-shared.ts`, `tests/media-shared.test.ts`. Files still stream through the private attachment route; no Blob URL reaches the browser.

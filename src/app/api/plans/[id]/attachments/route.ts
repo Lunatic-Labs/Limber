@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { auth } from "@/auth";
 import { getPlanForUser } from "@/lib/chat";
+import { canSendMessages } from "@/lib/plans-shared";
 import {
   ALLOWED_MIME_TYPES,
   ATTACHMENT_LIMITS,
@@ -30,6 +31,13 @@ export async function POST(req: Request, { params }: Ctx) {
   const plan = await getPlanForUser(id, session.user.id);
   if (!plan) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (!canSendMessages(plan.status)) {
+    return NextResponse.json(
+      { error: "This plan of care is archived. Files can't be added." },
+      { status: 409 }
+    );
   }
 
   let body: HandleUploadBody;

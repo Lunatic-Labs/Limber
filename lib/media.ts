@@ -76,6 +76,7 @@ export async function getPlanDetails(planId: string) {
   const [plan] = await db
     .select({
       title: plansOfCare.title,
+      diagnosis: plansOfCare.diagnosis,
       description: plansOfCare.description,
       status: plansOfCare.status,
       startDate: plansOfCare.startDate,

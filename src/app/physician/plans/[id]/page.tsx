@@ -9,6 +9,6 @@ export default async function PlanChatPage({
   return <ChatScreen
       planId={id}
       backHref="/physician"
-      detailsHref={`/physician/plans/${id}/details`}
+      detailsHref={`/physician/plans/${id}/conversation`}
     />;
 }

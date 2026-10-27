@@ -64,6 +64,9 @@ export default async function PatientDashboard() {
                 >
                   <div className="space-y-1">
                     <p className="text-lg font-semibold">{poc.title}</p>
+                    {poc.diagnosis && (
+                      <p className="text-sm text-ink-muted">{poc.diagnosis}</p>
+                    )}
                     <StatusBadge status={poc.status} />
                   </div>
                   <span className="shrink-0 text-sm font-medium text-brand-700">

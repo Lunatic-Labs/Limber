@@ -112,6 +112,11 @@ function AttachmentView({ a }: { a: ChatAttachment }) {
 type Props = {
   planOfCareId: string;
   planTitle: string;
+  planDiagnosis?: string | null;
+  // Archived plans are read-only: history is shown, the composer is not.
+  archived?: boolean;
+  // Extra control for the header's right side (e.g. the physician's Archive button).
+  headerAction?: React.ReactNode;
   currentUserId: string;
   otherName: string;
   initialMessages: ChatMessage[];
@@ -161,6 +166,9 @@ function formatStamp(iso: string): { day: string; clock: string } {
 export function ChatView({
   planOfCareId,
   planTitle,
+  planDiagnosis = null,
+  archived: archivedProp = false,
+  headerAction,
   currentUserId,
   otherName,
   initialMessages,
@@ -173,6 +181,10 @@ export function ChatView({
   const [draft, setDraft] = useState("");
   const [files, setFiles] = useState<PendingFile[]>([]);
   const [attachError, setAttachError] = useState<string | null>(null);
+  // The server rejects sends to an archived plan (409); that flips this
+  // on so a chat left open when the physician archives it locks up too.
+  const [archivedByServer, setArchivedByServer] = useState(false);
+  const archived = archivedProp || archivedByServer;
   // Timestamps depend on the viewer's timezone/clock, so they're only
   // rendered after mount to avoid a server/client hydration mismatch.
   const [mounted, setMounted] = useState(false);
@@ -359,6 +371,13 @@ export function ChatView({
             })),
           }),
         });
+        if (res.status === 409) {
+          // Plan was archived while this chat was open: drop the unsent
+          // message and lock the composer instead of offering a retry.
+          setMessages((prev) => prev.filter((m) => m.id !== tmpId));
+          setArchivedByServer(true);
+          return;
+        }
         if (!res.ok) throw new Error("send failed");
         const data: { message: ChatMessage } = await res.json();
         setMessages((prev) =>
@@ -492,9 +511,14 @@ export function ChatView({
           <div className="min-w-0 text-left">
             <p className="truncate text-base font-semibold leading-tight">{otherName}</p>
             <p className="truncate text-xs leading-tight text-gray-500">{planTitle}</p>
+            {planDiagnosis && (
+              <p className="truncate text-xs leading-tight text-gray-500">
+                Dx: {planDiagnosis}
+              </p>
+            )}
           </div>
         </div>
-        <span />
+        <div className="justify-self-end">{headerAction}</div>
       </div>
 
       {/* Messages */}
@@ -583,7 +607,16 @@ export function ChatView({
         </div>
       </div>
 
-      {/* Composer */}
+      {/* Composer (replaced by a notice once the plan is archived) */}
+      {archived ? (
+        <div
+          role="status"
+          className="border-t border-brand-100 bg-brand-50 px-4 py-3 text-center text-sm text-ink-muted"
+        >
+          This plan of care is archived. You can still view past messages and
+          files, but new messages can&apos;t be sent.
+        </div>
+      ) : (
       <div className="border-t border-brand-100 bg-brand-50 p-3">
         {(files.length > 0 || attachError) && (
           <div className="mb-2 space-y-1">
@@ -695,6 +728,7 @@ export function ChatView({
           </button>
         </div>
       </div>
+      )}
     </div>
   );
 }

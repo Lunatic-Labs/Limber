@@ -12,6 +12,7 @@ import {
   NEW_MESSAGE_EVENT,
   planChannelName,
 } from "@/lib/chat-shared";
+import { canSendMessages } from "@/lib/plans-shared";
 import {
   MAX_ATTACHMENTS_PER_MESSAGE,
   validateAttachmentInput,
@@ -61,6 +62,13 @@ export async function POST(req: Request, { params }: Ctx) {
   const plan = await getPlanForUser(id, session.user.id);
   if (!plan) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (!canSendMessages(plan.status)) {
+    return NextResponse.json(
+      { error: "This plan of care is archived. New messages can't be sent." },
+      { status: 409 }
+    );
   }
 
   let text: unknown;

@@ -15,9 +15,7 @@ type ToggleKey =
   | "largeTouchTargets"
   | "simplifiedLayout"
   | "dyslexiaFont"
-  | "boldText"
-  | "confirmBeforeSend"
-  | "announceNewMessages"
+  | "boldText";
 
 const sections: {
   title: string;
@@ -65,14 +63,6 @@ const sections: {
     toggles: [
       { key: "simplifiedLayout", label: "Simplified layout", help: "Hide decorative elements and add more spacing." },
       { key: "dyslexiaFont", label: "Dyslexia-friendly font", help: "Use a highly legible typeface with extra spacing." },
-    ],
-  },
-  {
-    title: "Screen reader & messaging",
-    blurb: "Control how messages are announced and sent.",
-    toggles: [
-      { key: "announceNewMessages", label: "Announce new messages", help: "Screen readers read out new chat messages as they arrive." },
-      { key: "confirmBeforeSend", label: "Confirm before sending", help: "Ask before a message or attachment is sent." },
     ],
   },
 ];

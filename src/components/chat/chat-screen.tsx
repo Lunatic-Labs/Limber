@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
@@ -7,7 +6,6 @@ import { users } from "@/db/schema";
 import { getPlanForUser, getRecentMessages } from "@/lib/chat";
 import { getPreferences } from "@/lib/preferences";
 import { ChatView } from "./chat-view";
-import { ArchivePlanButton } from "./archive-plan-button";
 
 // Server-side wrapper shared by the patient and physician chat pages.
 // Verifies the signed-in user belongs to the plan, loads the history,
@@ -15,9 +13,11 @@ import { ArchivePlanButton } from "./archive-plan-button";
 export async function ChatScreen({
   planId,
   backHref,
+  detailsHref,
 }: {
   planId: string;
   backHref: string;
+  detailsHref: string;
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
@@ -45,23 +45,11 @@ export async function ChatScreen({
       planTitle={plan.title}
       planDiagnosis={plan.diagnosis}
       archived={plan.status === "archived"}
-      headerAction={
-        <div className="flex items-center">
-          <Link
-            href={`/${session.user.role}/plans/${plan.id}/details`}
-            className="flex min-h-[44px] items-center rounded-lg px-3 text-sm font-semibold text-brand-800 transition duration-fast hover:bg-brand-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-          >
-            Details
-          </Link>
-          {session.user.role === "physician" &&
-            plan.physicianUserId === session.user.id &&
-            plan.status !== "archived" && <ArchivePlanButton planId={plan.id} />}
-        </div>
-      }
       currentUserId={session.user.id}
       otherName={other?.name ?? other?.username ?? "Unknown"}
       initialMessages={initialMessages}
       backHref={backHref}
+      detailsHref={detailsHref}
       announceNewMessages={prefs.announceNewMessages}
       confirmBeforeSend={prefs.confirmBeforeSend}
       compact={prefs.messageDensity === "compact"}

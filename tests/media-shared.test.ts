@@ -64,6 +64,14 @@ test("decodeCursor returns null for missing or malformed input and never throws"
   // right shape, invalid date / id
   const badDate = encodeCursor({ createdAt: "yesterday", id: ID_A });
   assert.equal(decodeCursor(badDate), null);
+  // well-formed but impossible calendar dates / times
+  for (const createdAt of [
+    "2026-02-30T00:00:00.000Z",
+    "2026-13-01T00:00:00.000Z",
+    "2026-10-27T24:00:00.000Z",
+  ]) {
+    assert.equal(decodeCursor(encodeCursor({ createdAt, id: ID_A })), null);
+  }
   const badId = encodeCursor({ createdAt: "2026-10-27T15:36:31.123Z", id: "x" });
   assert.equal(decodeCursor(badId), null);
 });

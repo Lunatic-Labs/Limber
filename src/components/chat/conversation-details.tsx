@@ -140,8 +140,7 @@ export async function ConversationDetails({
         </div>
       </div>
 
-      <div
-        role="tablist"
+      <nav
         aria-label="Conversation details"
         className="flex gap-2 overflow-x-auto border-b border-brand-100 bg-brand-50 px-3 pb-3"
       >
@@ -150,10 +149,7 @@ export async function ConversationDetails({
           return (
             <Link
               key={t.id}
-              role="tab"
-              id={`tab-${t.id}`}
-              aria-selected={selected}
-              aria-controls="details-panel"
+              aria-current={selected ? "page" : undefined}
               href={`${detailsPath}?tab=${t.id}`}
               className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-fast focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
                 selected
@@ -165,9 +161,9 @@ export async function ConversationDetails({
             </Link>
           );
         })}
-      </div>
+      </nav>
 
-      <div id="details-panel" role="tabpanel" aria-labelledby={`tab-${tab}`}>
+      <div>
         {tab === "info" ? (
           editing ? (
             <div className="p-4">

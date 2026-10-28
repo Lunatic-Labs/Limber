@@ -31,6 +31,8 @@ export function MediaViewer({ items, index, onIndexChange, onClose, describe }: 
   const hasNext = index < items.length - 1;
 
   function handleKeyDown(e: React.KeyboardEvent) {
+    // Arrow keys seek inside the video's native controls; don't hijack them.
+    if (e.target instanceof HTMLVideoElement) return;
     if (e.key === "ArrowLeft" && hasPrev) onIndexChange(index - 1);
     if (e.key === "ArrowRight" && hasNext) onIndexChange(index + 1);
   }
@@ -47,7 +49,7 @@ export function MediaViewer({ items, index, onIndexChange, onClose, describe }: 
   if (!item) return null;
   const failed = broken === item.id;
   const nav =
-    "absolute top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:flex";
+    "absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white";
 
   return (
     <dialog

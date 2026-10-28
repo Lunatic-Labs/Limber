@@ -57,7 +57,13 @@ export function decodeCursor(value: unknown): MediaCursor | null {
     if (typeof parsed !== "object" || parsed === null) return null;
     const { createdAt, id } = parsed as Record<string, unknown>;
     if (typeof createdAt !== "string" || !ISO_RE.test(createdAt)) return null;
-    if (Number.isNaN(Date.parse(createdAt))) return null;
+    const ms = Date.parse(createdAt);
+    if (Number.isNaN(ms)) return null;
+    // Date.parse rolls impossible dates (Feb 30) over instead of rejecting
+    // them, and Postgres would reject the original string.
+    if (new Date(ms).toISOString().slice(0, 19) !== createdAt.slice(0, 19)) {
+      return null;
+    }
     if (typeof id !== "string" || !UUID_RE.test(id)) return null;
     return { createdAt, id };
   } catch {

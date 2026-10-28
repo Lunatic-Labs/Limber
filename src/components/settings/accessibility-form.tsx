@@ -87,9 +87,9 @@ export function AccessibilityForm({
           aria-labelledby={`a11y-${slug(section.title)}`}
           className="rounded-xl border border-brand-100 bg-card p-5 shadow-sm"
         >
-          <h2 id={`a11y-${slug(section.title)}`} className="text-lg font-semibold">
+          <h3 id={`a11y-${slug(section.title)}`} className="text-lg font-semibold">
             {section.title}
-          </h2>
+          </h3>
           <p className="mb-4 text-sm text-ink-muted">{section.blurb}</p>
 
           <div className="space-y-5">

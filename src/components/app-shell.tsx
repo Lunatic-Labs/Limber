@@ -33,41 +33,38 @@ function NavGroup({
   }, [inGroup]);
   const listId = `nav-${item.label.toLowerCase().replace(/\s+/g, "-")}-sections`;
 
+  const parentClass = `${linkBase} w-full justify-between text-left ${inGroup ? linkOn : linkOff}`;
+
   return (
     <div>
-      <div className="flex items-center gap-1">
-        <Link
-          href={item.href}
-          onClick={onNavigate}
-          aria-current={inGroup && !hash ? "page" : undefined}
-          className={`${linkBase} flex-1 ${inGroup ? linkOn : linkOff}`}
-        >
-          {item.label}
-        </Link>
+      {inGroup ? (
+        // Already on the parent's page: the label toggles the sub-list.
         <button
           type="button"
           onClick={() => setExpanded((e) => !e)}
           aria-expanded={expanded}
           aria-controls={listId}
-          aria-label={`${expanded ? "Collapse" : "Expand"} ${item.label} sections`}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-muted transition-colors duration-fast hover:bg-brand-50 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          className={parentClass}
         >
-          <svg
-            viewBox="0 0 24 24"
-            className={`h-5 w-5 transition-transform duration-fast ${expanded ? "rotate-180" : ""}`}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          {item.label}
         </button>
-      </div>
-      {expanded && (
-        <ul id={listId} className="mt-1 space-y-1 border-l border-brand-100 pl-2 ml-4">
+      ) : (
+        // Elsewhere: the label navigates, which also opens the sub-list.
+        <Link href={item.href} onClick={onNavigate} className={parentClass}>
+          {item.label}
+        </Link>
+      )}
+      {/* grid-rows 0fr -> 1fr animates height without measuring it. */}
+      <div
+        className={`grid transition-[grid-template-rows,opacity] duration-base ease-out ${
+          expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <ul
+          id={listId}
+          inert={!expanded}
+          className="ml-4 min-h-0 space-y-1 overflow-hidden border-l border-brand-100 pl-2"
+        >
           {item.children!.map((child) => {
             const childHash = child.href.includes("#") ? "#" + child.href.split("#")[1] : "";
             const active = inGroup && hash === childHash;
@@ -85,7 +82,7 @@ function NavGroup({
             );
           })}
         </ul>
-      )}
+      </div>
     </div>
   );
 }

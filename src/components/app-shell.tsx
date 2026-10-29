@@ -180,7 +180,11 @@ export function AppShell({
               <NavGroup key={item.href} item={item} pathname={pathname} hash={hash} onNavigate={onNavigate} />
             );
           }
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
+          const matches = (href: string) => pathname === href || pathname.startsWith(href + "/");
+          // /patient also prefixes /patient/activities, so the most specific link wins.
+          const active =
+            matches(item.href) &&
+            !nav.some((o) => o !== item && o.href.length > item.href.length && matches(o.href));
           return (
             <Link
               key={item.href}

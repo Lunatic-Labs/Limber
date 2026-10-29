@@ -1,9 +1,10 @@
 import { asc, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { invitations, users } from "@/db/schema";
+import { invitations, patientProfiles, users } from "@/db/schema";
 import { invitationStatus } from "@/lib/invitations";
 import { InviteForm } from "@/components/admin/invite-form";
 import { PageHeader } from "@/components/ui/page-header";
+import { ReassignPhysician } from "@/components/admin/reassign-physician";
 import { RevokeInviteButton } from "@/components/admin/revoke-invite-button";
 
 const ROLE_LABEL = {
@@ -13,7 +14,7 @@ const ROLE_LABEL = {
 } as const;
 
 export default async function AdminDashboard() {
-  const [allUsers, pending] = await Promise.all([
+  const [allUsers, pending, assignments] = await Promise.all([
     db
       .select({
         id: users.id,
@@ -30,7 +31,15 @@ export default async function AdminDashboard() {
       .where(isNull(invitations.acceptedAt))
       .orderBy(desc(invitations.createdAt))
       .limit(100),
+    db
+      .select({
+        patientId: patientProfiles.userId,
+        physicianId: patientProfiles.physicianUserId,
+      })
+      .from(patientProfiles),
   ]);
+
+  const physicianOf = new Map(assignments.map((a) => [a.patientId, a.physicianId]));
 
   const physicians = allUsers
     .filter((u) => u.role === "physician")
@@ -89,6 +98,7 @@ export default async function AdminDashboard() {
                 <th className="px-5 py-3 font-semibold">Name</th>
                 <th className="px-5 py-3 font-semibold">Email</th>
                 <th className="px-5 py-3 font-semibold">Type</th>
+                <th className="px-5 py-3 font-semibold">Physician</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-100">
@@ -97,6 +107,18 @@ export default async function AdminDashboard() {
                   <td className="px-5 py-3">{u.name ?? u.username}</td>
                   <td className="px-5 py-3">{u.email ?? "—"}</td>
                   <td className="px-5 py-3">{ROLE_LABEL[u.role]}</td>
+                  <td className="px-5 py-3">
+                    {u.role === "patient" ? (
+                      <ReassignPhysician
+                        patientId={u.id}
+                        patientName={u.name ?? u.username}
+                        currentPhysicianId={physicianOf.get(u.id) ?? null}
+                        physicians={physicians}
+                      />
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

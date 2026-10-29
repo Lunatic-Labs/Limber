@@ -15,7 +15,19 @@ export function navForRole(role: string): NavItem[] {
     href: "/settings",
     children: SETTINGS_SECTIONS.map((s) => ({ label: s.label, href: `/settings#${s.id}` })),
   };
-  if (role === "physician") return [{ label: "Patients", href: "/physician" }, settings];
-  if (role === "patient") return [{ label: "My Plans of Care", href: "/patient" }, settings];
+  if (role === "physician") {
+    return [
+      { label: "Patients", href: "/physician" },
+      { label: "Manage Activities", href: "/physician/activities" },
+      settings,
+    ];
+  }
+  if (role === "patient") {
+    return [
+      { label: "My Plans of Care", href: "/patient" },
+      { label: "My Activities", href: "/patient/activities" },
+      settings,
+    ];
+  }
   return [settings];
 }

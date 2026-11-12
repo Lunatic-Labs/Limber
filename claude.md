@@ -180,3 +180,9 @@ Hand-authored (this session's npm registry access is blocked by org egress polic
 - API: `GET /api/plans/[id]/media?tab=media|documents&before=<cursor>&limit=<n>` (30 default, 60 max), plan-membership checked via `getPlanForUser` (404 otherwise). Cursor is `(createdAt, id)` and compares at millisecond precision (`lib/media.ts`). The first page is server-rendered; "Load more" fetches the rest.
 - Pure logic + tests: `lib/media-shared.ts`, `tests/media-shared.test.ts`. Files still stream through the private attachment route; no Blob URL reaches the browser.
 - Not built: "show in chat" jump, sender filter, real thumbnails (full files load lazily), stored video duration, structured POC fields beyond `description`, route/UI tests (no harness).
+
+## Admin Delete Ability (Lim-25)
+- Admins can delete users
+- When a user is deleted they should no longer be able to log in
+- Deleted user's chats should be archived so other people can still read chat history
+- When deleting admins should be asked if they are sure they want to delete that user as it cannot be undone.

@@ -76,3 +76,14 @@ html[data-reduced-motion="true"] *::after {
     scroll-behavior: auto !important;
   }
 }
+
+/* Smooth scrolling for in-page anchors (Settings sections). The reduced-motion
+   rules above reset scroll-behavior to auto. */
+html { scroll-behavior: smooth; }
+
+/* Brief fade-in on the section a link just jumped to. */
+@keyframes section-arrive {
+  from { opacity: 0.5; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+section[id]:target { animation: section-arrive 400ms ease-out; }

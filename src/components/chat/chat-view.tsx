@@ -115,8 +115,6 @@ type Props = {
   planDiagnosis?: string | null;
   // Archived plans are read-only: history is shown, the composer is not.
   archived?: boolean;
-  // Extra control for the header's right side (e.g. the physician's Archive button).
-  headerAction?: React.ReactNode;
   currentUserId: string;
   otherName: string;
   // The other party's account was deleted by an admin: the plan is archived
@@ -124,6 +122,7 @@ type Props = {
   otherDeleted?: boolean;
   initialMessages: ChatMessage[];
   backHref: string;
+  detailsHref: string;
   announceNewMessages?: boolean;
   confirmBeforeSend?: boolean;
   compact?: boolean;
@@ -171,12 +170,12 @@ export function ChatView({
   planTitle,
   planDiagnosis = null,
   archived: archivedProp = false,
-  headerAction,
   currentUserId,
   otherName,
   otherDeleted = false,
   initialMessages,
   backHref,
+  detailsHref,
   announceNewMessages = true,
   confirmBeforeSend = false,
   compact = false,
@@ -510,7 +509,11 @@ export function ChatView({
             <path d="M15 5l-7 7 7 7" />
           </svg>
         </Link>
-        <div className="flex min-w-0 max-w-[60vw] items-center gap-2 sm:max-w-xs">
+        <Link
+          href={detailsHref}
+          aria-label={`Photos, documents and plan details for ${otherName}`}
+          className="flex min-w-0 max-w-[60vw] items-center gap-2 rounded-lg px-2 py-1 transition-colors duration-fast hover:bg-brand-100 active:bg-brand-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 sm:max-w-xs"
+        >
           <Avatar name={otherName} size="sm" />
           <div className="min-w-0 text-left">
             <p className="truncate text-base font-semibold leading-tight">{otherName}</p>
@@ -521,8 +524,13 @@ export function ChatView({
               </p>
             )}
           </div>
-        </div>
-        <div className="justify-self-end">{headerAction}</div>
+          <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-brand-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 11v5" />
+            <path d="M12 8h.01" />
+          </svg>
+        </Link>
+        <div aria-hidden />
       </div>
 
       {/* Messages */}

@@ -7,7 +7,87 @@ import { Wordmark } from "@/components/ui/wordmark";
 import { Avatar } from "@/components/ui/avatar";
 import { SignOutButton } from "@/components/sign-out-button";
 
-export type NavItem = { label: string; href: string };
+const linkBase =
+  "flex min-h-[44px] items-center rounded-lg px-3 text-base font-medium transition-colors duration-fast focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500";
+const linkOn = "bg-brand-50 text-brand-800";
+const linkOff = "text-ink-muted hover:bg-brand-50 hover:text-brand-800";
+
+// A nav link with nested sub-links (e.g. Settings > its sections). The link
+// itself navigates; the chevron is a separate disclosure button. Opens
+// automatically while the user is anywhere under the parent's path.
+function NavGroup({
+  item,
+  pathname,
+  hash,
+  onNavigate,
+}: {
+  item: NavItem;
+  pathname: string;
+  hash: string;
+  onNavigate: () => void;
+}) {
+  const inGroup = pathname === item.href || pathname.startsWith(item.href + "/");
+  const [expanded, setExpanded] = useState(inGroup);
+  useEffect(() => {
+    if (inGroup) setExpanded(true);
+  }, [inGroup]);
+  const listId = `nav-${item.label.toLowerCase().replace(/\s+/g, "-")}-sections`;
+
+  const parentClass = `${linkBase} w-full justify-between text-left ${inGroup ? linkOn : linkOff}`;
+
+  return (
+    <div>
+      {inGroup ? (
+        // Already on the parent's page: the label toggles the sub-list.
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          aria-expanded={expanded}
+          aria-controls={listId}
+          className={parentClass}
+        >
+          {item.label}
+        </button>
+      ) : (
+        // Elsewhere: the label navigates, which also opens the sub-list.
+        <Link href={item.href} onClick={onNavigate} className={parentClass}>
+          {item.label}
+        </Link>
+      )}
+      {/* grid-rows 0fr -> 1fr animates height without measuring it. */}
+      <div
+        className={`grid transition-[grid-template-rows,opacity] duration-base ease-out ${
+          expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <ul
+          id={listId}
+          inert={!expanded}
+          className="ml-4 min-h-0 space-y-1 overflow-hidden border-l border-brand-100 pl-2"
+        >
+          {item.children!.map((child) => {
+            const childHash = child.href.includes("#") ? "#" + child.href.split("#")[1] : "";
+            const active = inGroup && hash === childHash;
+            return (
+              <li key={child.href}>
+                <Link
+                  href={child.href}
+                  onClick={onNavigate}
+                  aria-current={active ? "location" : undefined}
+                  className={`${linkBase} text-sm ${active ? linkOn : linkOff}`}
+                >
+                  {child.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+export type NavItem = { label: string; href: string; children?: NavItem[] };
 
 // Signed-in layout: left sidebar on desktop, slide-in drawer on phones.
 export function AppShell({
@@ -28,6 +108,17 @@ export function AppShell({
   const headerRef = useRef<HTMLElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [headerH, setHeaderH] = useState(0);
+
+  // URL hash (for #section sub-links). usePathname() doesn't include it, and
+  // Next's client-side hash navigation doesn't fire hashchange, so links also
+  // update this on click via onNavigate.
+  const [hash, setHash] = useState("");
+  useEffect(() => {
+    const read = () => setHash(window.location.hash);
+    read();
+    window.addEventListener("hashchange", read);
+    return () => window.removeEventListener("hashchange", read);
+  }, [pathname]);
 
   // Close on route change.
   useEffect(() => setOpen(false), [pathname]);
@@ -79,18 +170,28 @@ export function AppShell({
       )}
       <nav aria-label="Main" className="flex-1 space-y-1 px-3">
         {nav.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
+          const onNavigate = () => {
+            setOpen(false);
+            // Link's own pushState runs after this click handler.
+            setTimeout(() => setHash(window.location.hash), 0);
+          };
+          if (item.children) {
+            return (
+              <NavGroup key={item.href} item={item} pathname={pathname} hash={hash} onNavigate={onNavigate} />
+            );
+          }
+          const matches = (href: string) => pathname === href || pathname.startsWith(href + "/");
+          // /patient also prefixes /patient/activities, so the most specific link wins.
+          const active =
+            matches(item.href) &&
+            !nav.some((o) => o !== item && o.href.length > item.href.length && matches(o.href));
           return (
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => setOpen(false)}
+              onClick={onNavigate}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-[44px] items-center rounded-lg px-3 text-base font-medium transition-colors duration-fast focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
-                active
-                  ? "bg-brand-50 text-brand-800"
-                  : "text-ink-muted hover:bg-brand-50 hover:text-brand-800"
-              }`}
+              className={`${linkBase} ${active ? linkOn : linkOff}`}
             >
               {item.label}
             </Link>

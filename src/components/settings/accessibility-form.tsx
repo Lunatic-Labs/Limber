@@ -15,9 +15,7 @@ type ToggleKey =
   | "largeTouchTargets"
   | "simplifiedLayout"
   | "dyslexiaFont"
-  | "boldText"
-  | "confirmBeforeSend"
-  | "announceNewMessages"
+  | "boldText";
 
 const sections: {
   title: string;
@@ -67,14 +65,6 @@ const sections: {
       { key: "dyslexiaFont", label: "Dyslexia-friendly font", help: "Use a highly legible typeface with extra spacing." },
     ],
   },
-  {
-    title: "Screen reader & messaging",
-    blurb: "Control how messages are announced and sent.",
-    toggles: [
-      { key: "announceNewMessages", label: "Announce new messages", help: "Screen readers read out new chat messages as they arrive." },
-      { key: "confirmBeforeSend", label: "Confirm before sending", help: "Ask before a message or attachment is sent." },
-    ],
-  },
 ];
 
 export function AccessibilityForm({
@@ -97,9 +87,9 @@ export function AccessibilityForm({
           aria-labelledby={`a11y-${slug(section.title)}`}
           className="rounded-xl border border-brand-100 bg-card p-5 shadow-sm"
         >
-          <h2 id={`a11y-${slug(section.title)}`} className="text-lg font-semibold">
+          <h3 id={`a11y-${slug(section.title)}`} className="text-lg font-semibold">
             {section.title}
-          </h2>
+          </h3>
           <p className="mb-4 text-sm text-ink-muted">{section.blurb}</p>
 
           <div className="space-y-5">

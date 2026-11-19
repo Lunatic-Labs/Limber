@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { PageHeader, EmptyState } from "@/components/ui/page-header";
 import { patientProfiles, plansOfCare, users } from "@/db/schema";
+import { userDisplayName } from "@/lib/user-deletion";
 
 export default async function PatientDashboard() {
   const session = await auth();
@@ -15,6 +16,7 @@ export default async function PatientDashboard() {
     .select({
       physicianName: users.name,
       physicianUsername: users.username,
+      physicianDeletedAt: users.deletedAt,
     })
     .from(patientProfiles)
     .innerJoin(users, eq(patientProfiles.physicianUserId, users.id))
@@ -25,7 +27,13 @@ export default async function PatientDashboard() {
     .from(plansOfCare)
     .where(eq(plansOfCare.patientUserId, patientId));
 
-  const physicianName = profile?.physicianName ?? profile?.physicianUsername;
+  const physicianName = profile
+    ? userDisplayName({
+        name: profile.physicianName,
+        username: profile.physicianUsername,
+        deletedAt: profile.physicianDeletedAt,
+      })
+    : undefined;
 
   return (
     <main className="space-y-8">
@@ -40,7 +48,9 @@ export default async function PatientDashboard() {
             <Avatar name={physicianName} />
             <div>
               <p className="text-lg font-semibold">{physicianName}</p>
-              <p className="text-sm text-ink-muted">@{profile.physicianUsername}</p>
+              {!profile.physicianDeletedAt && (
+                <p className="text-sm text-ink-muted">@{profile.physicianUsername}</p>
+              )}
             </div>
           </div>
         ) : (

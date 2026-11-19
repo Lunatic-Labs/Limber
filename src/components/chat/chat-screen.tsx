@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getPlanForUser, getRecentMessages } from "@/lib/chat";
 import { getPreferences } from "@/lib/preferences";
+import { userDisplayName } from "@/lib/user-deletion";
 import { ChatView } from "./chat-view";
 import { ArchivePlanButton } from "./archive-plan-button";
 
@@ -31,7 +32,7 @@ export async function ChatScreen({
       : plan.patientUserId;
 
   const [other] = await db
-    .select({ name: users.name, username: users.username })
+    .select({ name: users.name, username: users.username, deletedAt: users.deletedAt })
     .from(users)
     .where(eq(users.id, otherUserId))
     .limit(1);
@@ -59,7 +60,8 @@ export async function ChatScreen({
         </div>
       }
       currentUserId={session.user.id}
-      otherName={other?.name ?? other?.username ?? "Unknown"}
+      otherName={other ? userDisplayName(other) : "Unknown"}
+      otherDeleted={!!other?.deletedAt}
       initialMessages={initialMessages}
       backHref={backHref}
       announceNewMessages={prefs.announceNewMessages}

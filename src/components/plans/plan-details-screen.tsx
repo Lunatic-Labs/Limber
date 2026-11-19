@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getPlanForUser } from "@/lib/chat";
 import { canEditPlan } from "@/lib/plans-shared";
+import { userDisplayName } from "@/lib/user-deletion";
 import { PlanDetails } from "./plan-details";
 
 // Server wrapper shared by the patient and physician details pages.
@@ -25,12 +26,12 @@ export async function PlanDetailsScreen({
   if (!plan) notFound();
 
   const [patient] = await db
-    .select({ name: users.name, username: users.username })
+    .select({ name: users.name, username: users.username, deletedAt: users.deletedAt })
     .from(users)
     .where(eq(users.id, plan.patientUserId))
     .limit(1);
   const [physician] = await db
-    .select({ name: users.name, username: users.username })
+    .select({ name: users.name, username: users.username, deletedAt: users.deletedAt })
     .from(users)
     .where(eq(users.id, plan.physicianUserId))
     .limit(1);
@@ -48,8 +49,8 @@ export async function PlanDetailsScreen({
       diagnosis={plan.diagnosis ?? ""}
       description={plan.description ?? ""}
       startDate={plan.startDate.toISOString().slice(0, 10)}
-      patientName={patient?.name ?? patient?.username ?? "Unknown"}
-      physicianName={physician?.name ?? physician?.username ?? "Unknown"}
+      patientName={patient ? userDisplayName(patient) : "Unknown"}
+      physicianName={physician ? userDisplayName(physician) : "Unknown"}
       canEdit={canEdit}
       chatHref={chatHref}
       backHref={backHref}

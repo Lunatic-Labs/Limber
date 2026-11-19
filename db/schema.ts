@@ -63,6 +63,11 @@ export const users = pgTable("user", {
   username: text("username").notNull().unique(),
   passwordHash: text("password_hash"),
   role: userRoleEnum("role").notNull(),
+  // Set when an administrator deletes the account. The row is kept as an
+  // anonymized tombstone (name/email/username/password wiped) so past
+  // messages and plans of care keep a valid sender/party; the account can
+  // no longer sign in and is hidden from every user list.
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

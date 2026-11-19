@@ -8,6 +8,7 @@ import { PageHeader, EmptyState } from "@/components/ui/page-header";
 import { ButtonLink } from "@/components/ui/button";
 import { patientProfiles, plansOfCare, users } from "@/db/schema";
 import { plansForFormerPatients } from "@/lib/assignment";
+import { userDisplayName } from "@/lib/user-deletion";
 
 export default async function PhysicianDashboard() {
   const session = await auth();
@@ -44,7 +45,12 @@ export default async function PhysicianDashboard() {
   );
   const formerPatients = former.length
     ? await db
-        .select({ id: users.id, name: users.name, username: users.username })
+        .select({
+          id: users.id,
+          name: users.name,
+          username: users.username,
+          deletedAt: users.deletedAt,
+        })
         .from(users)
         .where(inArray(users.id, [...new Set(former.map((p) => p.patientUserId))]))
     : [];
@@ -132,12 +138,13 @@ export default async function PhysicianDashboard() {
             Former patients
           </h2>
           <p className="mb-3 text-sm text-ink-muted">
-            These patients are now assigned to another physician. You can still
-            read the plans of care you created for them.
+            These patients are no longer assigned to you (moved to another
+            physician, or their account was deleted). You can still read the
+            plans of care you created for them.
           </p>
           <ul className="space-y-4">
             {formerPatients.map((patient) => {
-              const displayName = patient.name ?? patient.username;
+              const displayName = userDisplayName(patient);
               return (
                 <li
                   key={patient.id}

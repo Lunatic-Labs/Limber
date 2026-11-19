@@ -1,11 +1,14 @@
-import { asc, desc, eq, isNull } from "drizzle-orm";
+import { asc, desc, isNull } from "drizzle-orm";
+import { auth } from "@/auth";
 import { db } from "@/db";
 import { invitations, patientProfiles, users } from "@/db/schema";
 import { invitationStatus } from "@/lib/invitations";
 import { InviteForm } from "@/components/admin/invite-form";
 import { PageHeader } from "@/components/ui/page-header";
+import { DeleteUserButton } from "@/components/admin/delete-user-button";
 import { ReassignPhysician } from "@/components/admin/reassign-physician";
 import { RevokeInviteButton } from "@/components/admin/revoke-invite-button";
+import { physicianBlockedMessage } from "@/lib/user-deletion";
 
 const ROLE_LABEL = {
   patient: "Patient",
@@ -14,6 +17,8 @@ const ROLE_LABEL = {
 } as const;
 
 export default async function AdminDashboard() {
+  const session = await auth();
+  const currentAdminId = session?.user?.id;
   const [allUsers, pending, assignments] = await Promise.all([
     db
       .select({
@@ -24,6 +29,7 @@ export default async function AdminDashboard() {
         role: users.role,
       })
       .from(users)
+      .where(isNull(users.deletedAt))
       .orderBy(asc(users.role), asc(users.name)),
     db
       .select()
@@ -40,6 +46,10 @@ export default async function AdminDashboard() {
   ]);
 
   const physicianOf = new Map(assignments.map((a) => [a.patientId, a.physicianId]));
+  const patientCountOf = new Map<string, number>();
+  for (const a of assignments) {
+    patientCountOf.set(a.physicianId, (patientCountOf.get(a.physicianId) ?? 0) + 1);
+  }
 
   const physicians = allUsers
     .filter((u) => u.role === "physician")
@@ -104,7 +114,28 @@ export default async function AdminDashboard() {
             <tbody className="divide-y divide-brand-100">
               {allUsers.map((u) => (
                 <tr key={u.id}>
-                  <td className="px-5 py-3">{u.name ?? u.username}</td>
+                  <td className="px-5 py-3">
+                    <div className="flex items-start gap-1">
+                      {u.id === currentAdminId ? (
+                        // Admins can't delete themselves; keep names aligned.
+                        <span className="inline-block min-w-[44px]" aria-hidden="true" />
+                      ) : (
+                        <DeleteUserButton
+                          userId={u.id}
+                          name={u.name ?? u.username}
+                          role={u.role}
+                          blockedReason={
+                            u.role === "physician" && (patientCountOf.get(u.id) ?? 0) > 0
+                              ? physicianBlockedMessage(patientCountOf.get(u.id) ?? 0)
+                              : null
+                          }
+                        />
+                      )}
+                      <span className="flex min-h-[44px] items-center">
+                        {u.name ?? u.username}
+                      </span>
+                    </div>
+                  </td>
                   <td className="px-5 py-3">{u.email ?? "—"}</td>
                   <td className="px-5 py-3">{ROLE_LABEL[u.role]}</td>
                   <td className="px-5 py-3">

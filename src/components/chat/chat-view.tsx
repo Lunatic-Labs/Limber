@@ -117,6 +117,9 @@ type Props = {
   archived?: boolean;
   currentUserId: string;
   otherName: string;
+  // The other party's account was deleted by an admin: the plan is archived
+  // (read-only) and the notice says why.
+  otherDeleted?: boolean;
   initialMessages: ChatMessage[];
   backHref: string;
   detailsHref: string;
@@ -169,6 +172,7 @@ export function ChatView({
   archived: archivedProp = false,
   currentUserId,
   otherName,
+  otherDeleted = false,
   initialMessages,
   backHref,
   detailsHref,
@@ -621,8 +625,9 @@ export function ChatView({
           role="status"
           className="border-t border-brand-100 bg-brand-50 px-4 py-3 text-center text-sm text-ink-muted"
         >
-          This plan of care is archived. You can still view past messages and
-          files, but new messages can&apos;t be sent.
+          {otherDeleted
+            ? "This account has been deleted. You can still view past messages and files, but new messages can't be sent."
+            : "This plan of care is archived. You can still view past messages and files, but new messages can't be sent."}
         </div>
       ) : (
       <div className="border-t border-brand-100 bg-brand-50 p-3">

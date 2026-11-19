@@ -17,6 +17,31 @@ import { authConfig } from "./auth.config";
 // OAuth account for the adapter to link a database session to.
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
+  callbacks: {
+    ...authConfig.callbacks,
+    // Sessions are stateless JWTs, so a deleted user's cookie would otherwise
+    // stay valid until it expires. Re-check the account on every request and
+    // return null (which clears the session) if it is gone or deleted. A
+    // lookup that errors keeps the session (see below).
+    async jwt(params) {
+      const token = await authConfig.callbacks.jwt(params);
+      if (!token.sub) return token;
+      try {
+        const [row] = await db
+          .select({ deletedAt: users.deletedAt })
+          .from(users)
+          .where(eq(users.id, token.sub))
+          .limit(1);
+        if (!row || row.deletedAt) return null;
+      } catch (err) {
+        // A failed lookup must not sign every user out (Auth.js clears the
+        // cookie when this callback throws). Keep the session; the page's own
+        // queries will surface a real outage. Only a confirmed deletion ends it.
+        console.error("Session user check failed:", err);
+      }
+      return token;
+    },
+  },
   adapter: DrizzleAdapter(db, {
     usersTable: users,
     accountsTable: accounts,
@@ -44,7 +69,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .where(eq(users.username, username))
           .limit(1);
 
-        if (!user || !user.passwordHash) return null;
+        if (!user || user.deletedAt || !user.passwordHash) return null;
 
         const passwordMatches = await verifyPassword(
           password,

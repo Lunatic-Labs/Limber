@@ -51,7 +51,13 @@ export async function POST(req: Request) {
     const [physician] = await db
       .select({ id: users.id })
       .from(users)
-      .where(and(eq(users.id, physicianUserId), eq(users.role, "physician")))
+      .where(
+        and(
+          eq(users.id, physicianUserId),
+          eq(users.role, "physician"),
+          isNull(users.deletedAt)
+        )
+      )
       .limit(1);
     if (!physician) {
       return NextResponse.json(

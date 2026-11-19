@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { patientProfiles, plansOfCare, users } from "@/db/schema";
 import { getAdminSession } from "@/lib/admin";
@@ -46,7 +46,13 @@ export async function PATCH(
   const [physician] = await db
     .select({ id: users.id })
     .from(users)
-    .where(and(eq(users.id, physicianUserId), eq(users.role, "physician")))
+    .where(
+      and(
+        eq(users.id, physicianUserId),
+        eq(users.role, "physician"),
+        isNull(users.deletedAt)
+      )
+    )
     .limit(1);
   if (!physician) {
     return NextResponse.json({ error: "Choose a valid physician." }, { status: 400 });

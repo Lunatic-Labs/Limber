@@ -1,8 +1,8 @@
 # Commit Stats
 
 **Repository:** Limber  
-**Updated:** Friday, November 20, 2026 at 6:17 AM CST  
-**As of commit:** `ab2afd9` on `main`
+**Updated:** Saturday, November 21, 2026 at 6:19 AM CST  
+**As of commit:** `a09448b` on `main`
 
 Contributions by each student. Instructor-provided base code is excluded,
 and work done by AI coding agents (such as Copilot's coding agent) is credited
@@ -10,13 +10,11 @@ to the student who requested it.
 
 ## Students
 
-| Student | Email | Commits | Spec lines | Code lines | Lines added (all history) |
-|---|---|--:|--:|--:|--:|
-| kjharalson | kjharalson@mail.lipscomb.edu | 29 | 0 | 5,106 (55.7%) | 5,886 (57.2%) |
-| Renè Marius | 158001899+renemarius@users.noreply.github.com | 31 | 0 | 4,055 (44.3%) | 4,404 (42.8%) |
-| **Total** | | **60** | **0** | **9,161** | **10,290** |
-
-_Pull request stats unavailable: GitHub lookup failed (Get "https://api.github.com/repos/Lunatic-Labs/Limber/pulls/1/reviews?per_page=100": read tcp 192.168.1.157:54541->140.82.112.5:443: read: connection reset by peer)._
+| Student | Email | Commits | Spec lines | Code lines | Lines added (all history) | PRs opened | PRs merged | PRs reviewed |
+|---|---|--:|--:|--:|--:|--:|--:|--:|
+| kjharalson | kjharalson@mail.lipscomb.edu | 29 | 0 | 5,106 (55.7%) | 5,886 (57.2%) | 4 | 4 | 0 |
+| Renè Marius | 158001899+renemarius@users.noreply.github.com | 31 | 0 | 4,055 (44.3%) | 4,404 (42.8%) | 5 | 5 | 0 |
+| **Total** | | **60** | **0** | **9,161** | **10,290** | **9** | **9** | **0** |
 
 ## Features
 
